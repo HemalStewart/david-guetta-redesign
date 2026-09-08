@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Placeholder mark">
+  <!-- Placeholder mark only. Replace with the approved brand icon before launch;
+       an abstract beam motif is used rather than invented initials or a logo. -->
+  <rect width="64" height="64" fill="#101010"/>
+  <path d="M32 6 L46 58 L38 58 L32 26 L26 58 L18 58 Z" fill="#FF5738"/>
+  <rect x="8" y="50" width="48" height="4" fill="#F3F0E9"/>
+</svg>

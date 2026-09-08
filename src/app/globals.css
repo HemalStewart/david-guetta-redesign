@@ -1,26 +1,116 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------
+   Design tokens — see design.md §6.
+   Values are the specification starting point. Re-verify contrast
+   if the client supplies different brand colours.
+   --------------------------------------------------------------- */
+@theme {
+  --color-ink: #101010;
+  --color-ink-raised: #191918;
+  --color-paper: #f3f0e9;
+  --color-paper-raised: #e9e5db;
+  --color-signal: #ff5738;
+  --color-signal-hover: #ff745c;
+  --color-muted-dark: #b8b5af;
+  --color-muted-light: #625f59;
+  --color-rule-dark: #3a3936;
+  --color-rule-light: #cec9c0;
+
+  /* Interactive boundaries. WCAG 1.4.11 wants 3:1 for a control's visual
+     boundary, which the decorative rule tokens above do not reach:
+     rule-dark is 1.65:1 on ink. Measured with tests/tools/contrast.mjs. */
+  --color-control-dark: #75726b; /* 3.96:1 on ink, 3.67:1 on ink-raised */
+  --color-control-light: #625f59; /* 5.59:1 on paper */
+
+  /* Signal is 2.77:1 on paper, so it can never carry small text there.
+     This is the same hue darkened to 5.35:1 for labels on warm-white. */
+  --color-signal-ink: #b82f0c;
+
+  --font-display: var(--font-barlow-condensed), Impact, "Arial Narrow", sans-serif;
+  --font-body: var(--font-inter), Arial, sans-serif;
+
+  --spacing-gutter: 1.25rem;
+
+  --breakpoint-xs: 23.4375rem; /* 375px */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  @media (min-width: 64rem) {
+    body {
+      font-size: 1.125rem;
+    }
+  }
+
+  /* Focus: paper ring on dark, ink ring on paper/signal. */
+  :focus-visible {
+    outline: 2px solid var(--color-paper);
+    outline-offset: 3px;
+  }
+
+  .on-paper :focus-visible,
+  .on-signal :focus-visible {
+    outline-color: var(--color-ink);
+  }
+
+  ::selection {
+    background: var(--color-signal);
+    color: var(--color-ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Oversized condensed display type. */
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 0.92;
+    letter-spacing: -0.005em;
+  }
+
+  .type-meta {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (min-width: 64rem) {
+    .type-meta {
+      font-size: 0.8125rem;
+    }
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+
 }
