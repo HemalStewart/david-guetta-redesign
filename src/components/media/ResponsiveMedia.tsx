@@ -12,8 +12,12 @@ type Props = {
   sizes: string;
   priority?: boolean;
   className?: string;
-  /** Small corner tag naming the asset as a placeholder. */
-  label?: string | null;
+  /**
+   * Corner tag shown ONLY when generated artwork stands in for a missing
+   * asset. Real imagery is never tagged: its rights status is a site-wide
+   * statement, not a badge repeated on every tile.
+   */
+  placeholderLabel?: string | null;
 };
 
 /**
@@ -32,7 +36,7 @@ export function ResponsiveMedia({
   sizes,
   priority = false,
   className = "",
-  label = null,
+  placeholderLabel = "Placeholder artwork",
 }: Props) {
   const objectPosition = image?.focal ? `${image.focal.x * 100}% ${image.focal.y * 100}%` : "center";
 
@@ -52,9 +56,9 @@ export function ResponsiveMedia({
         <PlaceholderArt variant={placeholder} seed={seed} className="absolute inset-0 h-full w-full" />
       )}
 
-      {label ? (
+      {!image && placeholderLabel ? (
         <span className="type-meta absolute left-0 top-0 bg-ink/85 px-2 py-1 text-[0.625rem] text-muted-dark">
-          {label}
+          {placeholderLabel}
         </span>
       ) : null}
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,16 +13,33 @@ function isCurrent(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Wordmark. Plain set type until an approved vector is supplied. */
+/**
+ * Wordmark. Uses the supplied light-on-dark artwork when there is one and
+ * falls back to set type when there is not, so the header never breaks while
+ * brand assets are outstanding.
+ */
 function Wordmark({ settings, onClick }: { settings: SiteSettings; onClick?: () => void }) {
   return (
     <Link
       href="/"
       onClick={onClick}
-      className="type-display text-2xl leading-none tracking-tight md:text-[1.75rem]"
+      className="inline-flex items-center"
       aria-label={`${settings.artistName} — home`}
     >
-      {settings.artistName}
+      {settings.wordmark.light ? (
+        <Image
+          src={settings.wordmark.light}
+          alt={settings.artistName}
+          width={2000}
+          height={256}
+          priority
+          className="h-4 w-auto md:h-5"
+        />
+      ) : (
+        <span className="type-display text-2xl leading-none tracking-tight md:text-[1.75rem]">
+          {settings.artistName}
+        </span>
+      )}
     </Link>
   );
 }

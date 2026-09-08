@@ -9,17 +9,17 @@
  */
 import { activeCampaign } from "@/content/campaign";
 import { demoEvents } from "@/content/events";
-import { demoReleases } from "@/content/releases";
+import { officialReleases } from "@/content/releases";
 import { siteSettings } from "@/content/site";
-import { demoVideos } from "@/content/videos";
+import { officialVideos } from "@/content/videos";
 import { nextEvent, pastEvents, upcomingEvents } from "@/lib/dates";
 import type { Campaign, LiveEvent, Region, Release, SiteSettings, Video } from "./types";
 import { validateEvents, validateReleases, validateVideos } from "./validate";
 
 /** Fixtures are validated once, at module load, so bad data fails loudly. */
-const releases = validateReleases(demoReleases);
+const releases = validateReleases(officialReleases);
 const events = validateEvents(demoEvents);
-const videos = validateVideos(demoVideos);
+const videos = validateVideos(officialVideos);
 
 /**
  * Distinguishes "the provider returned nothing" from "the provider failed".
@@ -35,8 +35,18 @@ export function getCampaign(): Campaign {
   return activeCampaign;
 }
 
+/**
+ * Newest verified release date first. Entries with no supplied date fall back
+ * to the catalogue order from the source, and sort after everything dated —
+ * we do not guess a date to place them.
+ */
 export function getReleases(): Release[] {
-  return [...releases].sort((a, b) => (a.releaseDate < b.releaseDate ? 1 : -1));
+  return [...releases].sort((a, b) => {
+    if (a.releaseDate && b.releaseDate) return a.releaseDate < b.releaseDate ? 1 : -1;
+    if (a.releaseDate) return -1;
+    if (b.releaseDate) return 1;
+    return a.sortIndex - b.sortIndex;
+  });
 }
 
 export function getFeaturedRelease(): Release | null {
@@ -53,8 +63,14 @@ export function getRelatedReleases(slug: string, limit = 3): Release[] {
     .slice(0, limit);
 }
 
+/** Only years the client has actually supplied become filter options. */
 export function getReleaseYears(): number[] {
-  const years = new Set(releases.map((release) => Number(release.releaseDate.slice(0, 4))));
+  const years = new Set(
+    releases
+      .map((release) => release.releaseDate?.slice(0, 4))
+      .filter((year): year is string => Boolean(year))
+      .map(Number),
+  );
   return [...years].sort((a, b) => b - a);
 }
 

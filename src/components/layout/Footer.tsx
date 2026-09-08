@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import type { SiteSettings } from "@/lib/content/types";
@@ -16,9 +17,19 @@ export function Footer({ settings }: { settings: SiteSettings }) {
     <footer className="border-t border-rule-dark bg-ink">
       <Container className="py-14 md:py-20">
         {/* Large but secondary identity — it must not compete with the hero. */}
-        <p className="type-display text-[15vw] leading-[0.85] text-paper/15 md:text-[9rem] lg:text-[11rem]">
-          {settings.artistName}
-        </p>
+        {settings.wordmark.light ? (
+          <Image
+            src={settings.wordmark.light}
+            alt=""
+            width={2000}
+            height={256}
+            className="h-auto w-full max-w-3xl opacity-15"
+          />
+        ) : (
+          <p className="type-display text-[15vw] leading-[0.85] text-paper/15 md:text-[9rem] lg:text-[11rem]">
+            {settings.artistName}
+          </p>
+        )}
 
         <div className="mt-10 grid gap-10 border-t border-rule-dark pt-10 md:grid-cols-3">
           <nav aria-label="Footer">

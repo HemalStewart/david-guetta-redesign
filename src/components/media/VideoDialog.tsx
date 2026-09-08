@@ -93,7 +93,6 @@ export function VideoLauncher({ video, fallbackUrl, size = "card", placement = "
           seed={video.id}
           aspect="aspect-[16/9]"
           sizes={isFeature ? "(min-width: 1024px) 80vw, 100vw" : "(min-width: 1024px) 32vw, 92vw"}
-          label={video.approval === "demo" ? "Placeholder still" : null}
           className="transition-opacity duration-200 group-hover:opacity-90"
         />
         <span className="mt-4 flex flex-wrap items-center gap-3">

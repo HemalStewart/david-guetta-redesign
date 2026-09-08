@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ResponsiveMedia } from "@/components/media/ResponsiveMedia";
-import { ReleaseCard, releaseTypeLabel } from "@/components/music/ReleaseCard";
+import { ReleaseCard, releaseMetaLine } from "@/components/music/ReleaseCard";
 import { ReleaseFilters } from "@/components/music/ReleaseFilters";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getFeaturedRelease, getReleaseYears, getReleases } from "@/lib/content";
 import type { ReleaseType } from "@/lib/content/types";
-import { formatReleaseDate } from "@/lib/dates";
 
 export const metadata: Metadata = {
   title: "Music",
@@ -21,14 +20,19 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
   const { type = "", year = "" } = await searchParams;
   const all = getReleases();
   const featured = getFeaturedRelease();
+  const featuredMeta = featured ? releaseMetaLine(featured) : null;
 
   const filtered = all.filter((release) => {
     if (type && release.type !== (type as ReleaseType)) return false;
-    if (year && release.releaseDate.slice(0, 4) !== year) return false;
+    if (year && release.releaseDate?.slice(0, 4) !== year) return false;
     return true;
   });
 
-  const availableTypes = [...new Set(all.map((release) => release.type))];
+  const availableTypes = [...new Set(all.map((release) => release.type))].filter(
+    (type): type is ReleaseType => type !== null,
+  );
+  // Filters only exist for metadata the client has actually supplied.
+  const missingMetadata = all.some((release) => !release.type || !release.releaseDate);
 
   return (
     <>
@@ -55,7 +59,6 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
                     aspect="aspect-square"
                     sizes="(min-width: 768px) 30vw, 92vw"
                     priority
-                    label={featured.approval === "demo" ? "Placeholder artwork" : null}
                     className="transition-opacity duration-200 group-hover:opacity-90"
                   />
                 </Link>
@@ -67,10 +70,7 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
                   </Link>
                 </h3>
                 <p className="mt-3 text-base text-paper md:text-lg">{featured.artists.join(", ")}</p>
-                <p className="type-meta mt-2 text-muted-dark">
-                  {releaseTypeLabel(featured.type)} <span aria-hidden="true">·</span>{" "}
-                  <span className="tabular">{formatReleaseDate(featured.releaseDate)}</span>
-                </p>
+                {featuredMeta ? <p className="type-meta tabular mt-2 text-muted-dark">{featuredMeta}</p> : null}
                 {featured.description ? (
                   <p className="mt-6 max-w-prose text-base text-muted-dark md:text-lg">{featured.description}</p>
                 ) : null}
@@ -83,6 +83,14 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
         ) : null}
 
         <ReleaseFilters availableTypes={availableTypes} years={getReleaseYears()} activeType={type} activeYear={year} />
+
+        {missingMetadata ? (
+          <p className="mt-6 max-w-prose text-sm text-muted-dark">
+            Release type and year filters appear automatically once that metadata is supplied. The official
+            discography this preview draws from does not publish release dates or types, and none have been
+            invented here.
+          </p>
+        ) : null}
 
         {filtered.length > 0 ? (
           <>

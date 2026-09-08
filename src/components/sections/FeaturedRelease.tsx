@@ -1,6 +1,6 @@
 import { ResponsiveMedia } from "@/components/media/ResponsiveMedia";
 import { ListenAction } from "@/components/music/ListenAction";
-import { releaseTypeLabel } from "@/components/music/ReleaseCard";
+import { releaseMetaLine } from "@/components/music/ReleaseCard";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -15,6 +15,9 @@ import { formatReleaseDate } from "@/lib/dates";
  */
 export function FeaturedRelease({ release }: { release: Release | null }) {
   if (!release) return null;
+  const meta = release.releaseDate
+    ? [releaseMetaLine(release), formatReleaseDate(release.releaseDate)].filter(Boolean).join(" · ")
+    : releaseMetaLine(release);
 
   return (
     <section aria-labelledby="featured-release-heading" className="on-paper bg-paper text-ink">
@@ -27,7 +30,6 @@ export function FeaturedRelease({ release }: { release: Release | null }) {
               seed={release.id}
               aspect="aspect-square"
               sizes="(min-width: 1024px) 40vw, 92vw"
-              label={release.approval === "demo" ? "Placeholder artwork" : null}
             />
           </div>
 
@@ -41,10 +43,7 @@ export function FeaturedRelease({ release }: { release: Release | null }) {
               {release.title}
             </h2>
             <p className="mt-4 text-lg text-ink">{release.artists.join(", ")}</p>
-            <p className="type-meta mt-3 text-muted-light">
-              {releaseTypeLabel(release.type)} <span aria-hidden="true">·</span>{" "}
-              <span className="tabular">{formatReleaseDate(release.releaseDate)}</span>
-            </p>
+            {meta ? <p className="type-meta tabular mt-3 text-muted-light">{meta}</p> : null}
 
             {release.description ? (
               <p className="mt-6 max-w-prose text-base text-ink/80 md:text-lg">{release.description}</p>

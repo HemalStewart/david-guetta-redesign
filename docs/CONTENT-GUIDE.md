@@ -2,6 +2,12 @@
 
 How to change what the site says, without touching layout code.
 
+> **Note on what is in there now.** `src/content/releases.ts` and
+> `videos.ts` hold real material taken from davidguetta.com and the official
+> YouTube channel, marked `approval: "pending-approval"` — real, but not
+> rights-cleared and not signed off. `events.ts` is still invented demo
+> fixtures. Both need replacing before launch; see `ASSET-MANIFEST.md`.
+
 Today all content lives in typed files under `src/content/`. Every component
 reads it through the adapter at `src/lib/content/index.ts` — so when a CMS is
 connected later, these instructions move to that CMS and the components do not
@@ -59,14 +65,15 @@ Adding a release:
 
 ```ts
 {
-  id: "rel-007",                    // stable and unique; never reused
+  id: "rel-009",                    // stable and unique; never reused
   slug: "release-title",            // lowercase-hyphenated; becomes /music/release-title
   title: "Release Title",
   artists: ["David Guetta", "Featured Artist"],
-  type: "single",                   // album | ep | single | remix | compilation
-  releaseDate: "2026-11-14",        // YYYY-MM-DD
+  type: "single",                   // album | ep | single | remix | compilation — or null
+  releaseDate: "2026-11-14",        // YYYY-MM-DD — or null if not supplied
+  sortIndex: 8,                     // catalogue order, used when dates are null
   artwork: { src: "/assets/music/release-title.jpg", alt: "Release Title artwork",
-             width: 1500, height: 1500, approval: "approved" },
+             width: 1500, height: 1500, source: "client supply 2026-11", approval: "approved" },
   placeholder: "artwork",
   description: "Two or three lines of approved campaign copy.",
   smartLink: "https://…",           // preferred; makes a platform chooser unnecessary
@@ -75,11 +82,25 @@ Adding a release:
   credits: null,
   featured: false,
   approval: "approved",
+  sourceUrl: "https://…",           // optional provenance note
 }
 ```
 
-Rules the validator enforces: unique `id` and `slug`, `YYYY-MM-DD` dates,
-square artwork, `https:` links only, at most one featured release.
+**`type` and `releaseDate` are nullable on purpose.** If a source does not state
+them, leave them `null` — do not substitute an upload date or guess a category.
+The consequences are visible and intentional:
+
+- The detail page prints "Release type to be confirmed · release date to be
+  confirmed".
+- The card omits the metadata line entirely rather than printing "Unknown".
+- The **Release type** filter appears only once two or more types are known, and
+  the **Year** filter only once two or more years are known. Below that, `/music`
+  shows a line explaining that the filters appear when the metadata arrives.
+- Releases with a date sort newest first; undated releases fall back to
+  `sortIndex` and sort after everything dated.
+
+Rules the validator enforces: unique `id` and `slug`, `YYYY-MM-DD` dates when
+present, square artwork, `https:` links only, at most one featured release.
 
 ---
 

@@ -1,6 +1,6 @@
 # QA report
 
-**Date:** 8 September 2026
+**Date:** 8 September 2026 (updated after real assets were sourced)
 **Build:** local production build (`next build`, then `next start`)
 **Machine:** macOS (Darwin 25.6.0), Node v24.10.0, npm 11.6.0
 **Browser under test:** Chromium 153 (Playwright 1.63 bundled headless shell)
@@ -16,9 +16,9 @@ This records what was actually run. Anything not run is listed under
 | --- | --- |
 | `npm run typecheck` (`tsc --noEmit`) | **Pass** — no errors |
 | `npm run lint` (`eslint`) | **Pass** — 0 errors, 0 warnings |
-| `npm test` (`node --test`) | **Pass** — 31 tests, 10 suites, 0 failures |
+| `npm test` (`node --test`) | **Pass** — 36 tests, 10 suites, 0 failures |
 | `npm run build` | **Pass** — 17 routes generated |
-| `npm run test:e2e` (`playwright test`) | **Pass** — 52 tests, 0 failures |
+| `npm run test:e2e` (`playwright test`) | **Pass** — 54 tests, 0 failures |
 | `node tests/tools/contrast.mjs` | Ran; results below |
 
 Route output from the production build:
@@ -34,7 +34,7 @@ Route output from the production build:
 
 ---
 
-## Unit tests — 31 passing
+## Unit tests — 36 passing
 
 `tests/unit/`, run on the real source modules with an injected clock.
 
@@ -50,6 +50,16 @@ Route output from the production build:
 - `nextEvent` returns null when nothing is upcoming.
 - Date block formatting: single date, same-month range, cross-month range split
   over two lines.
+
+**Content provenance** (5, added when real assets were sourced)
+- No fixture is marked `approved` — nothing can pass for signed-off content.
+- Every shipped image records a `source`, is served from `/assets/`, and is
+  marked `pending-approval`.
+- Every release carries a `sourceUrl` back to the page it came from.
+- No release states a release date or type, because the source publishes
+  neither.
+- Listening links are real `open.spotify.com/album/` URLs; every video has a
+  verified YouTube id, an official watch URL, and null date/duration.
 
 **Content and filters** (15)
 - All shipped fixtures pass every validator.
@@ -73,7 +83,7 @@ Route output from the production build:
 
 ---
 
-## Interaction tests — 52 passing
+## Interaction tests — 54 passing
 
 `tests/e2e/`, against the production build.
 
@@ -101,15 +111,20 @@ Route output from the production build:
 - A cancelled show offers no ticket action.
 
 **Music**
-- A card navigates to its detail page; the tracklist renders.
-- Type filters keep state in the URL.
-- A release with no listening link shows "Listening link pending".
+- A card navigates to its detail page.
+- No release claims a date or type the source never published — the detail page
+  says "to be confirmed" for both.
+- Filters stay hidden while their metadata is missing, and the page explains why.
+- A type passed directly in the URL still returns 200 and the no-match state.
+- The listening control resolves to a real Spotify album URL and its accessible
+  name identifies the release.
 
 **Video**
 - Zero `<iframe>` elements exist before a visitor clicks.
-- The dialog opens, is labelled, offers the official channel for an
-  unconnected video, closes on Escape and restores focus.
-- Only one dialog can be open; closing removes it.
+- On click the dialog mounts a player pointed at
+  `youtube-nocookie.com/embed/v8TVixpaBcQ`, is labelled, offers the official
+  watch URL alongside, closes on Escape and restores focus.
+- Only one dialog can be open; closing removes it and stops playback.
 
 **Newsletter**
 - An invalid address is rejected client-side and **no request is made**.
@@ -125,15 +140,21 @@ Route output from the production build:
 - No overflow at 360 px with the mobile menu open.
 - Hero CTAs and the Menu button are ≥44 px.
 
-**Page weight** (production build, local network)
-- `/` at 1440 px: **320–385 KB across 21 requests** over three runs.
-- `/` at 390 px: **319–383 KB across 17 requests**.
+**Page weight** (production build, local network, real photography in place)
+- `/` at 1440 px: **364–536 KB across 27 requests** over three runs.
+- `/` at 390 px: **328–330 KB across 22 requests** — stable.
 - **Zero third-party requests** on first load — no player, font CDN, social
-  embed or analytics beacon.
+  embed or analytics beacon. The YouTube iframe is created only on click, so
+  simply loading the homepage contacts nothing but the origin.
 
-The weight is almost entirely framework JavaScript and two self-hosted font
-families; the composition uses no raster images. Inter 600 was found to be
-unused and removed from the font load during this pass.
+Two honest caveats on this measurement. `next start` optimises images on
+demand, so the first request for a size is larger and slower than the cached
+variant a CDN would serve; each test therefore warms the page and then measures
+in a **fresh browser context**, because warming and measuring in the same page
+just reads the browser cache and reports a number no real visitor experiences.
+The remaining desktop spread reflects which AVIF/WebP variant the optimiser has
+ready. The assertion is a regression guard at 1200 KB, not a performance claim.
+Inter 600 was found to be unused and removed from the font load.
 
 ---
 
@@ -225,8 +246,34 @@ In `docs/screenshots/`, regenerate with `npm run screenshots`.
 | A cross-month date range overflowed its column | Ranges now break after the dash across two lines. |
 | Two contrast failures (see above) | New `signal-ink` and `control-*` tokens. |
 | Inter 600 was loaded but never used | Removed from the font load. |
+| The page-weight test warmed and measured in the same page, so it reported a browser-cache figure (67 KB) that no visitor would ever see | Measurement moved to a fresh browser context after warming. |
+| `networkidle` never settled on image-heavy routes at 390 px, hanging the screenshot run | Switched to `load` plus a settle beat. |
+| Release placeholders were generated sleeves; real artwork was available on the client's own site | Replaced with the real catalogue (see below). |
+| The hero photograph's subject sits left of centre — the mirror of the composition the brief sketched | Hero layout flipped to the right rather than cropping across the face. |
+| Per-tile "Placeholder" badges became wrong once imagery was real | Badges now render only for generated artwork; rights status is stated once, site-wide. |
+| The demo notice claimed everything was placeholder content, which stopped being true | Rewritten to separate uncleared real assets from invented show dates. |
 
 ---
+
+## Assets sourced from the live site
+
+Added after the first pass, at the client's request. Provenance is recorded in
+full in `ASSET-MANIFEST.md`; what matters for QA:
+
+- The wordmark, hero photography, 8 release artworks and 7 video stills were
+  downloaded from davidguetta.com and `i.ytimg.com`. Originals are kept
+  unmodified in `../incoming-assets/from-live-site/`.
+- **Rights are not cleared.** A unit test asserts nothing is marked `approved`.
+- Every video title and channel was re-confirmed individually through YouTube's
+  oEmbed endpoint rather than trusted from a scrape. All 7 returned author
+  "David Guetta".
+- All 8 Spotify album URLs were checked and returned HTTP 200.
+- Release dates and types were **not** inferred. WordPress upload-folder dates
+  are upload dates, not release dates, and were not repurposed.
+- Tour dates were deliberately **not** scraped from the site's Bandsintown
+  widget; `events.ts` remains invented fixtures.
+- The source's duplicate "I'm Good (Blue)" entry (identical artwork, same
+  Spotify album) was dropped.
 
 ## Not verified
 
@@ -253,7 +300,14 @@ Stated plainly so nobody assumes otherwise.
   `duplicate`, real `provider-error`): unreachable until a provider exists. The
   endpoint currently returns `provider-error` if it is ever reached with
   configuration present, because the provider call is still a documented stub.
-- **Outbound destinations**: the four social links, the radio/podcast link and
-  the Bandsintown artist page were opened on 8 September 2026 and resolved.
-  Bandsintown returns 403 to plain `curl` (bot protection) but loads in a
-  browser. Re-verify all of them at launch.
+- **Outbound destinations**: the four social links, the radio/podcast link, the
+  Bandsintown artist page, all 8 Spotify album URLs and all 7 YouTube watch URLs
+  were checked on 8 September 2026 and resolved. Bandsintown returns 403 to
+  plain `curl` (bot protection) but loads in a browser. Re-verify all of them at
+  launch.
+- **Rights and licensing**: not assessed. Whether these assets may be
+  republished is a question for the client and their legal representatives, not
+  something this build can answer.
+- **Full artist credits**: the discography lists only "David Guetta" for every
+  entry. Featured artists appear in release titles and on the sleeves, but the
+  credit lists shown on the site are the source's, not verified.

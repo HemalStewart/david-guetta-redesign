@@ -70,8 +70,8 @@ export function validateReleases(releases: Release[]): Release[] {
   for (const release of releases) {
     if (!release.title.trim()) throw new ContentError(`release ${release.id}: title is required`);
     if (release.artists.length === 0) throw new ContentError(`release ${release.id}: at least one artist is required`);
-    if (!ISO_DATE.test(release.releaseDate)) {
-      throw new ContentError(`release ${release.id}: releaseDate must be YYYY-MM-DD`);
+    if (release.releaseDate !== null && !ISO_DATE.test(release.releaseDate)) {
+      throw new ContentError(`release ${release.id}: releaseDate must be YYYY-MM-DD or null`);
     }
     if (release.smartLink) assertSafeUrl(release.smartLink, `release ${release.id} smartLink`);
     for (const platform of release.platforms) {

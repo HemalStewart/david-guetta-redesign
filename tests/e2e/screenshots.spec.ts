@@ -18,7 +18,7 @@ const ROUTES = [
   { name: "home", path: "/" },
   { name: "live", path: "/live" },
   { name: "music", path: "/music" },
-  { name: "release", path: "/music/sample-album" },
+  { name: "release", path: "/music/crazy-what-love-can-do" },
   { name: "watch", path: "/watch" },
 ];
 
@@ -31,7 +31,10 @@ for (const width of WIDTHS) {
     test(`${route.name} @ ${width.name}px`, async ({ page }) => {
       await page.setViewportSize({ width: width.width, height: width.height });
       await page.goto(route.path);
-      await page.waitForLoadState("networkidle");
+      // "load" plus a settle beat: networkidle can hang on image-heavy routes
+      // where the optimiser is still streaming variants.
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(1200);
       await page.screenshot({ path: `${DIR}/${route.name}-${width.name}.png`, fullPage: true });
     });
   }
@@ -47,7 +50,7 @@ test("mobile menu open @ 390px", async ({ page }) => {
 test("video dialog open @ 1440px", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/watch");
-  await page.getByRole("button", { name: /Play video: Featured performance/ }).click();
+  await page.getByRole("button", { name: /Play video: Sorana & David Guetta - redruM/ }).click();
   await page.screenshot({ path: `${DIR}/video-dialog-1440.png` });
 });
 
@@ -72,7 +75,8 @@ test("home at 200% text zoom @ 1440px", async ({ page }) => {
   // 200% browser zoom does to available CSS pixels.
   await page.setViewportSize({ width: 720, height: 450 });
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
+  await page.waitForTimeout(1200);
   await page.screenshot({ path: `${DIR}/home-zoom200.png`, fullPage: true });
 });
 

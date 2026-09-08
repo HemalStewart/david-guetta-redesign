@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { demoEvents } from "../../src/content/events.ts";
-import { demoReleases } from "../../src/content/releases.ts";
-import { demoVideos } from "../../src/content/videos.ts";
+import { officialReleases } from "../../src/content/releases.ts";
+import { officialVideos } from "../../src/content/videos.ts";
+import { activeCampaign } from "../../src/content/campaign.ts";
 import { siteSettings } from "../../src/content/site.ts";
 import { filterEvents, matchesQuery } from "../../src/lib/content/filter.ts";
 import {
@@ -17,19 +18,66 @@ import type { LiveEvent, Release } from "../../src/lib/content/types.ts";
 
 describe("shipped fixtures", () => {
   it("pass every validator", () => {
-    assert.doesNotThrow(() => validateReleases(demoReleases));
+    assert.doesNotThrow(() => validateReleases(officialReleases));
     assert.doesNotThrow(() => validateEvents(demoEvents));
-    assert.doesNotThrow(() => validateVideos(demoVideos));
+    assert.doesNotThrow(() => validateVideos(officialVideos));
   });
 
   it("carry exactly one featured release and one featured video", () => {
-    assert.equal(demoReleases.filter((release) => release.featured).length, 1);
-    assert.equal(demoVideos.filter((video) => video.featured).length, 1);
+    assert.equal(officialReleases.filter((release) => release.featured).length, 1);
+    assert.equal(officialVideos.filter((video) => video.featured).length, 1);
   });
 
-  it("are all marked as demo, so nothing can be mistaken for approved content", () => {
-    for (const item of [...demoReleases, ...demoEvents, ...demoVideos]) {
-      assert.equal(item.approval, "demo", `${item.id} is not marked demo`);
+  it("contain nothing marked approved — no fixture can pass for signed-off content", () => {
+    for (const item of [...officialReleases, ...demoEvents, ...officialVideos]) {
+      assert.notEqual(item.approval, "approved", `${item.id} claims approval it does not have`);
+    }
+  });
+
+  it("record where every real image came from, so provenance survives to approval", () => {
+    const images = [
+      activeCampaign.image,
+      activeCampaign.mobileImage,
+      ...officialReleases.map((release) => release.artwork),
+      ...officialVideos.map((video) => video.still),
+    ].filter((image) => image !== null);
+
+    assert.ok(images.length > 0);
+    for (const image of images) {
+      assert.equal(image.approval, "pending-approval");
+      assert.ok(image.source, `an image is missing its source: ${image.src}`);
+      assert.ok(image.src.startsWith("/assets/"), `${image.src} is not a local asset`);
+    }
+  });
+
+  it("keeps every release traceable to the page it came from", () => {
+    for (const release of officialReleases) {
+      assert.ok(release.sourceUrl?.startsWith("https://davidguetta.com/"), `${release.id} has no source URL`);
+    }
+  });
+
+  it("states no release date or type that the source did not provide", () => {
+    for (const release of officialReleases) {
+      assert.equal(release.releaseDate, null, `${release.id} claims an unverified release date`);
+      assert.equal(release.type, null, `${release.id} claims an unverified release type`);
+    }
+  });
+
+  it("only offers listening links that are real store URLs", () => {
+    for (const release of officialReleases) {
+      for (const platform of release.platforms) {
+        assert.ok(platform.href.startsWith("https://open.spotify.com/"), platform.href);
+      }
+    }
+  });
+
+  it("only embeds videos with a verified provider id and official watch URL", () => {
+    for (const video of officialVideos) {
+      assert.equal(video.provider, "youtube");
+      assert.ok(video.embedId, `${video.id} has no embed id`);
+      assert.ok(video.providerUrl?.startsWith("https://www.youtube.com/watch?v="), `${video.id}`);
+      assert.equal(video.date, null);
+      assert.equal(video.duration, null);
     }
   });
 
@@ -103,8 +151,8 @@ describe("content validators", () => {
   });
 
   it("refuses more than one featured release", () => {
-    const release = demoReleases[1] as Release;
-    assert.throws(() => validateReleases([demoReleases[0], { ...release, featured: true }]), ContentError);
+    const release = officialReleases[1] as Release;
+    assert.throws(() => validateReleases([officialReleases[0], { ...release, featured: true }]), ContentError);
   });
 });
 

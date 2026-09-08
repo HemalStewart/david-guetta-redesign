@@ -2,10 +2,18 @@
 
 An unpublished redesign concept built from `../design.md`. It runs, it is
 responsive, and every journey in the brief works — but it is **not** an
-official David Guetta site and it is **not** production ready. All content is
-demo fixtures and original placeholder artwork, and no external service is
-connected. See [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) for exactly
-what stands between this and a launch.
+official David Guetta site and it is **not** production ready.
+
+> **The imagery, wordmark, release artwork and videos are real material taken
+> from davidguetta.com and the official YouTube channel, and are NOT
+> rights-cleared.** They are in the build so the design can be reviewed with
+> real content. Do not publish this anywhere public until the client confirms
+> the rights position. Show dates are still invented demo fixtures, and no
+> external service is connected.
+
+See [ASSET-MANIFEST.md](ASSET-MANIFEST.md) for the provenance of every file and
+[docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md) for what stands between
+this and a launch.
 
 ## Requirements
 
@@ -103,16 +111,27 @@ docs/                  QA report, migration map, content guide, launch checklist
 
 ## Honest states, by design
 
-Where the client has supplied nothing, the site says so rather than inventing:
+Where something is unknown or unsupplied, the site says so rather than
+inventing a value:
 
-- No approved photography → original abstract artwork at the correct ratios.
-- No ticket links → each row shows its real status; no dead "Tickets" button.
-- No listening links → "Listening link pending".
-- No video URLs → the still stays and the official YouTube channel is offered.
-- No newsletter provider → the form validates locally and reports
-  "Preview only — sign-up is not connected". **No address is stored or sent.**
-- No approved copyright holder or policy copy → both are marked unapproved.
+- **No release dates or types.** The official discography does not publish
+  them, so both are `null`, the detail page says "to be confirmed", and the
+  type/year filters stay hidden with a line explaining why. Upload-folder
+  dates were **not** repurposed as release dates.
+- **No ticket links.** Each row shows its real status; there is no dead
+  "Tickets" button anywhere.
+- **No newsletter provider.** The form validates locally and reports "Preview
+  only — sign-up is not connected". **No address is stored or transmitted** —
+  a test records network traffic to prove it.
+- **No approved copyright holder or policy copy.** Both are marked unapproved.
+- **No image supplied at all** → original abstract artwork at the correct
+  ratio, tagged "Placeholder artwork".
+
+Listening links are real Spotify album URLs taken from each release's own page
+on davidguetta.com. Videos are real, embedded only on an explicit click, from
+ids confirmed through YouTube's oEmbed endpoint.
 
 The "Concept preview" strip at the top of every page is driven by
-`siteSettings.demoMode` in `src/content/site.ts`. It disappears when that is
-set to `false` — do not set it until the fixtures are gone.
+`siteSettings.demoMode` in `src/content/site.ts`. It disappears when that is set
+to `false` — do not set it until the rights position is confirmed and the demo
+show dates are gone.

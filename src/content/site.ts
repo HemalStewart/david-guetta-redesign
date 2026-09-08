@@ -9,8 +9,9 @@ import type { SiteSettings } from "@/lib/content/types";
  */
 export const siteSettings: SiteSettings = {
   artistName: "David Guetta",
-  // No approved vector wordmark supplied — the header uses set type instead.
-  wordmark: { light: null, dark: null },
+  // The official wordmark from davidguetta.com (a 2000x256 PNG, no vector
+  // available publicly). Real, but not cleared for republication.
+  wordmark: { light: "/assets/brand/wordmark-light.png", dark: "/assets/brand/wordmark-dark.png" },
   tagline: "Music. Live. Worldwide.",
   nav: [
     { label: "Live", href: "/live" },

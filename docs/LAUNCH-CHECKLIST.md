@@ -8,6 +8,13 @@ Two separate questions. The first is answered; the second is not.
 - **Is it ready to publish?** **No.** Everything below the line is outstanding,
   and most of it depends on the client rather than on code.
 
+> **Blocker before anything else:** the wordmark, photography, release artwork
+> and video stills in this build were taken from davidguetta.com and the
+> official YouTube channel so the design could be reviewed with real material.
+> They are **not rights-cleared**. Confirm the rights position, or replace them
+> with licensed masters, before this is deployed anywhere public — including a
+> password-protected preview shared outside the client's team.
+
 ---
 
 ## Done
@@ -32,8 +39,8 @@ Two separate questions. The first is answered; the second is not.
 ### Verification
 - [x] `npm run typecheck` — pass
 - [x] `npm run lint` — pass
-- [x] `npm test` — 31 unit tests pass
-- [x] `npm run test:e2e` — 52 interaction, responsive and weight tests pass
+- [x] `npm test` — 36 unit tests pass
+- [x] `npm run test:e2e` — 54 interaction, responsive and weight tests pass
 - [x] `npm run build` — pass
 - [x] Contrast measured; two failures found and fixed
 - [x] No horizontal overflow at 360 / 390 / 768 / 1024 / 1440 px
@@ -51,10 +58,20 @@ Two separate questions. The first is answered; the second is not.
 
 Nothing here can be resolved by the build team alone.
 
-- [ ] **Approved wordmark** (light and dark SVG) — the header currently uses set type
-- [ ] **Hero photography**, desktop and phone crops, with agreed focal points
-- [ ] **Release catalogue**: real titles, artists, dates, credits, artwork, and
-      verified smart or platform links
+- [ ] **Rights confirmation for every sourced asset** (wordmark, hero
+      photography, 8 release artworks, 7 video stills) — see `ASSET-MANIFEST.md`
+- [ ] **Licensed vector wordmark** (SVG, light and dark) — the build currently
+      uses the 2016 PNG from the live site
+- [ ] **High-resolution stage photography**, desktop and phone crops, with
+      agreed focal points — the current hero is press portraiture at 1162 px and
+      upscales on large displays
+- [ ] **Release metadata**: dates, types, credits, tracklists and descriptions.
+      None are published by the source, so all are `null` and the type/year
+      filters stay hidden until they arrive.
+- [ ] **Smart links** per release, preferred over the per-platform Spotify
+      links currently in place
+- [ ] **Full artist credits** — the discography lists only "David Guetta";
+      featured artists appear in titles and on sleeves but are not confirmed
 - [ ] **Tour data**: authorised provider access or an approved export, with
       ticket and waitlist URLs and accurate statuses
 - [ ] **Video URLs and stills**, approved for embedding
@@ -119,8 +136,12 @@ off early would make invented content look approved.
 
 Before publishing, confirm all of these are true:
 
-- No file under `src/content/` contains `approval: "demo"`
-- No "Placeholder" tag renders anywhere on the site
+- No file under `src/content/` contains `approval: "demo"` or
+  `approval: "pending-approval"`
+- No "Placeholder artwork" tag renders anywhere on the site
+- Every asset in `public/assets/` is a licensed master, not a file downloaded
+  from the live site
+- Tour dates come from the real provider, not `src/content/events.ts`
 - Both policy pages carry approved legal copy, not the draft banner
 - The footer prints a real copyright holder
 - The newsletter either genuinely subscribes people or still says it is not

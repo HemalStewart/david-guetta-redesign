@@ -128,22 +128,34 @@ test.describe("live page", () => {
 test.describe("music", () => {
   test("a release card leads to its detail page", async ({ page }) => {
     await page.goto("/music");
-    await page.getByRole("link", { name: /Sample Album/ }).first().click();
-    await expect(page).toHaveURL(/\/music\/sample-album$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Sample Album" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Tracklist" })).toBeVisible();
+    await page.getByRole("link", { name: /Crazy What Love Can Do/ }).first().click();
+    await expect(page).toHaveURL(/\/music\/crazy-what-love-can-do$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Crazy What Love Can Do" })).toBeVisible();
   });
 
-  test("type filters keep state in the URL", async ({ page }) => {
+  test("no release claims a date or type the source never published", async ({ page }) => {
+    await page.goto("/music/crazy-what-love-can-do");
+    await expect(page.getByText(/Release type to be confirmed/)).toBeVisible();
+    await expect(page.getByText(/release date to be confirmed/)).toBeVisible();
+  });
+
+  test("filters stay hidden while their metadata is missing, and say why", async ({ page }) => {
     await page.goto("/music");
-    await page.getByRole("link", { name: "Albums" }).click();
-    await expect(page).toHaveURL(/type=album/);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Music");
+    await expect(page.getByRole("link", { name: "Albums" })).toHaveCount(0);
+    await expect(page.getByText(/Release type and year filters appear automatically/)).toBeVisible();
   });
 
-  test("an unsupplied listening link says so instead of pretending", async ({ page }) => {
-    await page.goto("/music/sample-album");
-    await expect(page.getByText("Listening link pending")).toBeVisible();
+  test("a filter passed in the URL still resolves rather than erroring", async ({ page }) => {
+    const response = await page.goto("/music?type=album");
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading", { name: "No releases match those filters" })).toBeVisible();
+  });
+
+  test("the listening control points at a real store and names its release", async ({ page }) => {
+    await page.goto("/music/crazy-what-love-can-do");
+    const listen = page.getByRole("link", { name: /Listen to Crazy What Love Can Do/ });
+    await expect(listen).toBeVisible();
+    await expect(listen).toHaveAttribute("href", /^https:\/\/open\.spotify\.com\/album\//);
   });
 });
 
@@ -153,12 +165,16 @@ test.describe("video dialog", () => {
     // Nothing is embedded before the visitor asks for it.
     expect(await page.locator("iframe").count()).toBe(0);
 
-    const trigger = page.getByRole("button", { name: /Play video: Featured performance/ });
+    const trigger = page.getByRole("button", { name: /Play video: Sorana & David Guetta - redruM/ });
     await trigger.click();
-    const dialog = page.getByRole("dialog", { name: /Video: Featured performance/ });
+    const dialog = page.getByRole("dialog", { name: /Video: Sorana & David Guetta - redruM/ });
     await expect(dialog).toBeVisible();
 
-    // Unconnected video keeps its still and offers the official channel.
+    // The player is created only now, and points at the privacy-preserving host.
+    await expect(dialog.locator("iframe")).toHaveAttribute(
+      "src",
+      /^https:\/\/www\.youtube-nocookie\.com\/embed\/v8TVixpaBcQ/,
+    );
     await expect(dialog.getByRole("link", { name: /Watch on YouTube/ })).toBeVisible();
 
     await page.keyboard.press("Escape");
@@ -168,7 +184,7 @@ test.describe("video dialog", () => {
 
   test("only one dialog can be open at a time", async ({ page }) => {
     await page.goto("/watch");
-    await page.getByRole("button", { name: /Play video: Festival set/ }).click();
+    await page.getByRole("button", { name: /Play video: David Guetta & Sia/ }).click();
     await expect(page.getByRole("dialog")).toHaveCount(1);
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);

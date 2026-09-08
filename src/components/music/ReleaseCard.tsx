@@ -3,7 +3,7 @@ import { ResponsiveMedia } from "@/components/media/ResponsiveMedia";
 import type { Release } from "@/lib/content/types";
 import { formatReleaseDate } from "@/lib/dates";
 
-const TYPE_LABELS: Record<Release["type"], string> = {
+const TYPE_LABELS: Record<NonNullable<Release["type"]>, string> = {
   album: "Album",
   ep: "EP",
   single: "Single",
@@ -11,8 +11,20 @@ const TYPE_LABELS: Record<Release["type"], string> = {
   compilation: "Compilation",
 };
 
-export function releaseTypeLabel(type: Release["type"]): string {
-  return TYPE_LABELS[type];
+export function releaseTypeLabel(type: Release["type"]): string | null {
+  return type ? TYPE_LABELS[type] : null;
+}
+
+/**
+ * Type and year, joined only where they are actually known.
+ * Returns null when the client has supplied neither, so the UI can omit the
+ * line rather than print "Unknown · Unknown".
+ */
+export function releaseMetaLine(release: Release): string | null {
+  const parts = [releaseTypeLabel(release.type), release.releaseDate?.slice(0, 4) ?? null].filter(
+    (part): part is string => Boolean(part),
+  );
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 /**
@@ -22,6 +34,7 @@ export function releaseTypeLabel(type: Release["type"]): string {
  */
 export function ReleaseCard({ release, tone = "light" }: { release: Release; tone?: "dark" | "light" }) {
   const muted = tone === "light" ? "text-muted-light" : "text-muted-dark";
+  const meta = releaseMetaLine(release);
 
   return (
     <article>
@@ -32,18 +45,16 @@ export function ReleaseCard({ release, tone = "light" }: { release: Release; ton
           seed={release.id}
           aspect="aspect-square"
           sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
-          label={release.approval === "demo" ? "Placeholder" : null}
           className="transition-opacity duration-200 group-hover:opacity-90"
         />
-        <p className={`type-meta mt-4 ${muted}`}>
-          {TYPE_LABELS[release.type]} <span aria-hidden="true">·</span>{" "}
-          <span className="tabular">{release.releaseDate.slice(0, 4)}</span>
-        </p>
-        <h3 className="type-display mt-2 text-2xl leading-[0.98] group-hover:text-signal md:text-[1.75rem]">
+        {meta ? <p className={`type-meta tabular mt-4 ${muted}`}>{meta}</p> : null}
+        <h3 className={`type-display text-2xl leading-[0.98] group-hover:text-signal md:text-[1.75rem] ${meta ? "mt-2" : "mt-4"}`}>
           {release.title}
         </h3>
         <p className={`mt-1 text-sm ${muted}`}>{release.artists.join(", ")}</p>
-        <span className={`sr-only`}>Released {formatReleaseDate(release.releaseDate)}</span>
+        {release.releaseDate ? (
+          <span className="sr-only">Released {formatReleaseDate(release.releaseDate)}</span>
+        ) : null}
       </Link>
     </article>
   );

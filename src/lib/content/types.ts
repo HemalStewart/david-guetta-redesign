@@ -6,7 +6,13 @@
  * demo fixtures can be swapped for the client's real provider later.
  */
 
-/** How trustworthy a piece of content is. Demo content is never launch content. */
+/**
+ * How trustworthy a piece of content is.
+ *  demo             — invented for the concept; never launch content
+ *  pending-approval — real, taken from an official source, but rights and
+ *                     accuracy are NOT cleared for republication
+ *  approved         — supplied and signed off by the client
+ */
 export type ApprovalStatus = "demo" | "pending-approval" | "approved";
 
 export type FocalPoint = { x: number; y: number };
@@ -20,6 +26,8 @@ export type ImageRef = {
   /** 0–1 focal point used for object-position so crops keep the subject. */
   focal?: FocalPoint;
   credit?: string;
+  /** Where the file came from, e.g. "davidguetta.com/image-gallery". */
+  source?: string;
   approval: ApprovalStatus;
 };
 
@@ -87,9 +95,16 @@ export type Release = {
   slug: string;
   title: string;
   artists: string[];
-  type: ReleaseType;
-  /** ISO date (YYYY-MM-DD). */
-  releaseDate: string;
+  /**
+   * Null when the source does not state it. The discography on
+   * davidguetta.com lists every entry under /album/ without a type, so these
+   * are left null rather than guessed.
+   */
+  type: ReleaseType | null;
+  /** ISO date (YYYY-MM-DD), or null when no release date has been supplied. */
+  releaseDate: string | null;
+  /** Catalogue order from the source, used when release dates are unknown. */
+  sortIndex: number;
   artwork: MaybeImage;
   placeholder: PlaceholderVariant;
   description: string | null;
@@ -100,6 +115,8 @@ export type Release = {
   credits: string | null;
   featured: boolean;
   approval: ApprovalStatus;
+  /** Where this entry was taken from, for provenance during approval. */
+  sourceUrl?: string;
 };
 
 export type EventStatus =

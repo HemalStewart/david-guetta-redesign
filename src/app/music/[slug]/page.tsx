@@ -19,11 +19,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params;
   const release = getReleaseBySlug(slug);
   if (!release) return { title: "Release not found" };
+  const details = [releaseTypeLabel(release.type), release.releaseDate ? formatReleaseDate(release.releaseDate) : null]
+    .filter(Boolean)
+    .join(", ");
   return {
     title: release.title,
-    description: `${release.title} — ${release.artists.join(", ")}. ${releaseTypeLabel(release.type)}, ${formatReleaseDate(
-      release.releaseDate,
-    )}.`,
+    description: `${release.title} — ${release.artists.join(", ")}${details ? `. ${details}.` : "."}`,
   };
 }
 
@@ -48,7 +49,6 @@ export default async function ReleasePage({ params }: { params: Params }) {
               aspect="aspect-square"
               sizes="(min-width: 1024px) 40vw, 92vw"
               priority
-              label={release.approval === "demo" ? "Placeholder artwork" : null}
             />
           </div>
 
@@ -56,10 +56,15 @@ export default async function ReleasePage({ params }: { params: Params }) {
             <h1 className="type-display text-[clamp(2.75rem,7vw,5rem)] leading-[0.9]">{release.title}</h1>
             <p className="mt-4 text-lg text-paper">{release.artists.join(", ")}</p>
             <p className="type-meta mt-3 text-muted-dark">
-              {releaseTypeLabel(release.type)} <span aria-hidden="true">·</span>{" "}
-              <time dateTime={release.releaseDate} className="tabular">
-                {formatReleaseDate(release.releaseDate)}
-              </time>
+              {releaseTypeLabel(release.type) ?? "Release type to be confirmed"}
+              <span aria-hidden="true"> · </span>
+              {release.releaseDate ? (
+                <time dateTime={release.releaseDate} className="tabular">
+                  {formatReleaseDate(release.releaseDate)}
+                </time>
+              ) : (
+                "release date to be confirmed"
+              )}
             </p>
 
             {release.description ? (
