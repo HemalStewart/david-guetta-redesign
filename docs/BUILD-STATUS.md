@@ -29,9 +29,11 @@ content and services — see `LAUNCH-CHECKLIST.md`.
 - Recognition module: 8 selected wins plus DJ Mag number-one years, wins only,
   no derived totals
 - 13 official videos, up from 7
-- Hero video pipeline: original 8 s generated loop, poster-first, requested
-  only after load, desktop only, reduced-motion and Save-Data aware, real pause
-  control, pauses off-screen, still never removed
+- Hero video pipeline with two sources: the client's official music videos via
+  YouTube's embed (active), or a self-hosted file. Both are poster-first,
+  requested only after load, desktop only, reduced-motion and Save-Data aware,
+  with a real pause control, and the still underneath is never removed
+- An original 10 s generated loop as the no-third-party alternative
 - Art-directed hero `<picture>` so only one crop is ever fetched
 - CSS motion: hero entrance, Ken Burns, light sweep, scroll-linked settle,
   artwork hover, arrow shift, dialog entrance, live-row nudge — all
@@ -44,8 +46,8 @@ content and services — see `LAUNCH-CHECKLIST.md`.
 | --- | --- |
 | `npm run typecheck` | Pass |
 | `npm run lint` | Pass, 0 warnings |
-| `npm test` | 46 pass |
-| `npm run test:e2e` | 68 pass |
+| `npm test` | 47 pass |
+| `npm run test:e2e` | 71 pass |
 | `npm run build` | Pass |
 | Contrast audit | Pass after two fixes |
 
@@ -55,6 +57,8 @@ content and services — see `LAUNCH-CHECKLIST.md`.
 - **The awards list is compiled from Wikipedia and unconfirmed by management.**
   Factual claims about a living person; blocking.
 - **Two live stores exist** — the client must say which is canonical.
+- **The hero embed needs consent gating in the EU/UK**, or the client's master
+  files so it can be self-hosted. It pulls in seven Google/YouTube domains.
 - Store prices are a 9 September 2026 snapshot, not live data.
 - Hero photography is press portraiture at 1162 px, not concert photography at
   the resolution the brief asks for

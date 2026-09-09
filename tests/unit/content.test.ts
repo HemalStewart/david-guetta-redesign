@@ -5,7 +5,7 @@ import { demoEvents } from "../../src/content/events.ts";
 import { storeProducts } from "../../src/content/products.ts";
 import { officialReleases } from "../../src/content/releases.ts";
 import { officialVideos } from "../../src/content/videos.ts";
-import { atmosphericCampaign, portraitCampaign } from "../../src/content/campaign.ts";
+import { atmosphericCampaign, musicVideoCampaign, portraitCampaign } from "../../src/content/campaign.ts";
 import { siteSettings } from "../../src/content/site.ts";
 import { filterEvents, matchesQuery } from "../../src/lib/content/filter.ts";
 import {
@@ -42,6 +42,8 @@ describe("shipped fixtures", () => {
     const images = [
       atmosphericCampaign.image,
       atmosphericCampaign.mobileImage,
+      musicVideoCampaign.image,
+      musicVideoCampaign.mobileImage,
       portraitCampaign.image,
       portraitCampaign.mobileImage,
       ...officialReleases.map((release) => release.artwork),
@@ -66,7 +68,7 @@ describe("shipped fixtures", () => {
 
   it("ship an original, self-generated hero loop rather than lifted footage", () => {
     const video = atmosphericCampaign.video;
-    assert.ok(video, "the atmospheric campaign must carry a loop");
+    assert.ok(video && video.kind === "file", "the atmospheric campaign must carry a hosted loop");
     assert.ok(video.sources.length >= 2, "offer webm and mp4");
     for (const source of video.sources) {
       assert.ok(source.src.startsWith("/assets/hero/"), source.src);
@@ -75,6 +77,23 @@ describe("shipped fixtures", () => {
     assert.equal(video.poster, "/assets/hero/hero-loop-poster.jpg");
     assert.equal(atmosphericCampaign.image?.src, video.poster);
     assert.ok(video.durationSeconds >= 6 && video.durationSeconds <= 10, "design.md §7B asks for 6-10s");
+  });
+
+  it("plays official music videos through YouTube rather than re-hosting them", () => {
+    const video = musicVideoCampaign.video;
+    assert.ok(video && video.kind === "youtube");
+    assert.ok(video.ids.length >= 2, "a montage needs more than one clip");
+    for (const id of video.ids) {
+      assert.match(id, /^[\w-]{11}$/, id);
+      // Every clip must be one we actually verified against the official channel.
+      assert.ok(
+        officialVideos.some((entry) => entry.embedId === id),
+        `${id} is not in the verified video list`,
+      );
+    }
+    // The poster is local, so the hero is composed before any third party loads.
+    assert.ok(video.poster.startsWith("/assets/"), video.poster);
+    assert.equal(musicVideoCampaign.image?.src, video.poster);
   });
 
   it("keeps every release traceable to the page it came from", () => {

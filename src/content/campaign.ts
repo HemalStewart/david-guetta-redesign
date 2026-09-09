@@ -50,13 +50,14 @@ export const atmosphericCampaign: Campaign = {
   },
   placeholder: "stage",
   video: {
+    kind: "file",
     // Smallest format first: VP9 is roughly half the size of the H.264 build.
     sources: [
       { src: "/assets/hero/hero-loop.webm", type: "video/webm" },
       { src: "/assets/hero/hero-loop.mp4", type: "video/mp4" },
     ],
     poster: "/assets/hero/hero-loop-poster.jpg",
-    durationSeconds: 8,
+    durationSeconds: 10,
   },
   primaryAction: { label: "View shows", href: "/live" },
   secondaryAction: { label: "Explore music", href: "/music" },
@@ -103,5 +104,92 @@ export const portraitCampaign: Campaign = {
   approval: "pending-approval",
 };
 
-/** Switch this line to `portraitCampaign` to lead with the photograph instead. */
-export const activeCampaign: Campaign = atmosphericCampaign;
+/**
+ * Music-video hero.
+ *
+ * Official footage, played by YouTube's own embed.
+ *
+ * The client has told us to use their videos, and it is their content to
+ * authorise. This plays them without downloading anything: YouTube serves the
+ * footage, views still count to the artist, and nothing is re-hosted here.
+ *
+ * If the client wants the videos self-hosted instead — better quality than a
+ * YouTube copy, no third-party frame, no cookie consent to manage — ask them
+ * for the MASTER FILES rather than pulling them off YouTube. Downloading from
+ * YouTube breaches YouTube's terms of service whoever owns the video, and the
+ * result is a re-compressed copy. Drop the masters into
+ * `public/assets/hero/` and switch `video` to `kind: "file"` — the pipeline
+ * already supports it and needs no code changes.
+ *
+ * The montage is assembled by YouTube, not by us: the first id is the embed and
+ * the rest become its playlist, so the clips play in sequence and loop.
+ *
+ * Three things to settle before launch, all of them real:
+ *
+ *  1. CONSENT. The embed is a third-party frame that can set cookies. The rest
+ *     of the site makes zero third-party requests on load. In the EU/UK this
+ *     needs to sit behind consent — the layer already treats a missing embed
+ *     as normal, so gating it is a small change. Self-hosting the masters
+ *     removes the problem entirely.
+ *  2. The player is cropped and scaled so its captions and logo fall outside
+ *     the frame. That is standard practice for a background embed, but
+ *     YouTube's branding terms ask that the player is not obscured — a call
+ *     for the client's team, not for this build. Again: moot if self-hosted.
+ *  3. Readability. Music videos have cuts, faces and bright frames; the display
+ *     type sits on a heavy scrim for that reason. Worth reviewing against the
+ *     final clip selection.
+ *
+ * The videos below are a selection from the official channel playlist. They are
+ * NOT ranked by popularity — no view-count data was available, and asserting a
+ * "most popular" order would be a claim this build cannot support.
+ */
+export const musicVideoCampaign: Campaign = {
+  id: "campaign-music-video",
+  titleLines: ["David", "Guetta"],
+  supportingCopy: "Music. Live. Worldwide.",
+  image: {
+    // Local still from the first clip, so the hero is composed before any
+    // third-party frame loads — and if the embed never arrives, this is what
+    // stays on screen.
+    src: "/assets/video/90RLzVUuXe4.jpg",
+    alt: "",
+    width: 1280,
+    height: 720,
+    focal: { x: 0.5, y: 0.45 },
+    source: "i.ytimg.com (official YouTube thumbnail)",
+    approval: "pending-approval",
+  },
+  mobileImage: {
+    src: "/assets/hero/hero-mobile.jpg",
+    alt: "",
+    width: 800,
+    height: 1200,
+    focal: { x: 0.52, y: 0.18 },
+    source: "davidguetta.com/image-gallery (011.jpg)",
+    approval: "pending-approval",
+  },
+  placeholder: "stage",
+  video: {
+    kind: "youtube",
+    ids: [
+      "90RLzVUuXe4", // I'm Good (Blue), with Bebe Rexha
+      "dSDbwfXX5_I", // I Don't Wanna Wait, with OneRepublic
+      "k3DBmAlUh1A", // Baby Don't Hurt Me, with Anne-Marie and Coi Leray
+      "8bzesUu_a4I", // Crazy What Love Can Do, with Becky Hill and Ella Henderson
+    ],
+    poster: "/assets/video/90RLzVUuXe4.jpg",
+  },
+  primaryAction: { label: "View shows", href: "/live" },
+  secondaryAction: { label: "Explore music", href: "/music" },
+  caption: "Official videos via YouTube — selection and consent gating to be confirmed",
+  approval: "pending-approval",
+};
+
+/**
+ * The active hero. Three options ship:
+ *
+ *   musicVideoCampaign   official footage via YouTube's embed (third-party)
+ *   atmosphericCampaign  our own generated loop (no third party, no cookies)
+ *   portraitCampaign     the photograph, with a slow Ken Burns scale
+ */
+export const activeCampaign: Campaign = musicVideoCampaign;

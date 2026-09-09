@@ -389,24 +389,25 @@ test.describe("hero video", () => {
    * The loop is an enhancement. These assert it can never become a
    * precondition for a usable hero.
    */
-  test("the hero is complete before any video exists", async ({ page }) => {
+  test("the hero is complete when the media is blocked", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    // Block the video outright: this is the "blocked, throttled or missing" case.
+    // Block every media path: the "blocked, consent-refused or missing" case.
     await page.route("**/hero-loop.*", (route) => route.abort());
+    await page.route("**youtube-nocookie.com/**", (route) => route.abort());
     await page.goto("/");
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: "View shows" })).toBeVisible();
     // The poster is a real <img>, server-rendered, and stays put.
-    const poster = page.locator('img[src*="hero-loop-poster"]').first();
+    const poster = page.locator("picture img").first();
     await expect(poster).toBeVisible();
     expect((await poster.boundingBox())!.height).toBeGreaterThan(100);
   });
 
-  test("no video is requested on a phone viewport", async ({ page }) => {
+  test("no video and no third party is requested on a phone viewport", async ({ page }) => {
     const requested: string[] = [];
     page.on("request", (request) => {
-      if (/hero-loop\.(webm|mp4)/.test(request.url())) requested.push(request.url());
+      if (/hero-loop\.(webm|mp4)|youtube/.test(request.url())) requested.push(request.url());
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
@@ -416,10 +417,10 @@ test.describe("hero video", () => {
     await expect(page.locator("video")).toHaveCount(0);
   });
 
-  test("no video is requested under reduced motion", async ({ page }) => {
+  test("no video and no third party is requested under reduced motion", async ({ page }) => {
     const requested: string[] = [];
     page.on("request", (request) => {
-      if (/hero-loop\.(webm|mp4)/.test(request.url())) requested.push(request.url());
+      if (/hero-loop\.(webm|mp4)|youtube/.test(request.url())) requested.push(request.url());
     });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -430,32 +431,56 @@ test.describe("hero video", () => {
     await expect(page.locator("video")).toHaveCount(0);
   });
 
-  test("on desktop the loop plays muted, loops, and offers a real pause control", async ({ page }) => {
+  test("on desktop the embed is muted, looped and hidden from assistive tech", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await page.waitForLoadState("load");
 
-    const video = page.locator("video");
-    await expect(video).toHaveCount(1);
-    await expect(video).toHaveJSProperty("muted", true);
-    await expect(video).toHaveJSProperty("loop", true);
-    // The generated file carries no audio track at all.
-    await expect(video).toHaveJSProperty("autoplay", true);
-
-    const pause = page.getByRole("button", { name: /Pause background/ });
-    await expect(pause).toBeVisible();
-    await pause.click();
-    await expect(video).toHaveJSProperty("paused", true);
-    await expect(page.getByRole("button", { name: /Play background/ })).toBeVisible();
+    const frame = page.locator('iframe[src*="youtube-nocookie"]');
+    await expect(frame).toHaveCount(1);
+    const src = (await frame.getAttribute("src"))!;
+    expect(src).toContain("mute=1");
+    expect(src).toContain("controls=0");
+    expect(src).toContain("loop=1");
+    // Several ids means YouTube plays the montage; we never cut the footage.
+    expect(new URL(src).searchParams.get("playlist")!.split(",").length).toBeGreaterThan(1);
+    // Scenery, not content: no keyboard trap, nothing announced.
+    await expect(frame).toHaveAttribute("aria-hidden", "true");
+    await expect(frame).toHaveAttribute("tabindex", "-1");
   });
 
-  test("the loop stops once the hero leaves the viewport", async ({ page }) => {
+  test("the embed is never served from the tracking domain", async ({ page }) => {
+    const hosts = new Set<string>();
+    page.on("request", (request) => {
+      const host = new URL(request.url()).hostname;
+      if (host.includes("youtube")) hosts.add(host);
+    });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await page.waitForLoadState("load");
-    await page.locator("video").waitFor();
+    await page.locator('iframe[src*="youtube"]').waitFor();
+    expect([...hosts]).not.toContain("www.youtube.com");
+  });
+
+  test("pausing removes the third-party frame entirely", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.locator('iframe[src*="youtube"]').waitFor();
+
+    await page.getByRole("button", { name: /Pause background/ }).click();
+    await expect(page.locator('iframe[src*="youtube"]')).toHaveCount(0);
+    await page.getByRole("button", { name: /Play background/ }).click();
+    await expect(page.locator('iframe[src*="youtube"]')).toHaveCount(1);
+  });
+
+  test("scrolling away tears the embed down", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.locator('iframe[src*="youtube"]').waitFor();
 
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await expect(page.locator("video")).toHaveJSProperty("paused", true);
+    await expect(page.locator('iframe[src*="youtube"]')).toHaveCount(0);
   });
 });

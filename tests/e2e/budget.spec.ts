@@ -96,13 +96,58 @@ test("home page transfer stays inside the project budget @ 390px", async ({ brow
   expect(initialKb).toBeLessThan(900);
 });
 
-test("no third-party player or feed loads before the visitor asks", async ({ page }) => {
-  const external: string[] = [];
+test("nothing third-party blocks the first paint", async ({ page }) => {
+  /**
+   * This used to assert zero third-party requests, full stop. That stopped
+   * being true when the hero moved to the official YouTube embed, so the
+   * assertion moved with it rather than being deleted.
+   *
+   * Two things it still guarantees: nothing third-party loads BEFORE the load
+   * event, so no outside host can delay the first paint; and afterwards the
+   * only outside hosts are the ones the embed itself pulls in.
+   *
+   * That set is bigger than "youtube-nocookie.com" — measured, it is six
+   * domains: the embed host, googlevideo.com for the stream, i.ytimg.com for
+   * thumbnails, gstatic.com and fonts.gstatic.com for the player's own assets,
+   * and google.com. This list IS the argument for consent gating, and for
+   * self-hosting the masters instead. Anything outside it — an analytics
+   * beacon, a social widget, a font CDN of our own — still fails.
+   */
+  const before: string[] = [];
+  const after: string[] = [];
+  let loaded = false;
+
   page.on("request", (request) => {
-    const url = new URL(request.url());
-    if (!["localhost", "127.0.0.1"].includes(url.hostname)) external.push(request.url());
+    const host = new URL(request.url()).hostname;
+    if (["localhost", "127.0.0.1"].includes(host)) return;
+    (loaded ? after : before).push(host);
   });
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.waitForLoadState("load");
+  loaded = true;
+  await page.waitForLoadState("networkidle");
+
+  expect(before, `third-party requests before load: ${before.join(", ")}`).toHaveLength(0);
+
+  const EMBED_HOSTS = /(^|\.)(youtube-nocookie\.com|ytimg\.com|googlevideo\.com|gstatic\.com|googleapis\.com|google\.com)$/;
+  const unexpected = [...new Set(after)].filter((host) => !EMBED_HOSTS.test(host));
+  expect(unexpected, `unexpected third-party hosts: ${unexpected.join(", ")}`).toHaveLength(0);
+
+  // Recorded so the privacy cost of the embed stays visible in the run output.
+  console.log(`third-party hosts pulled in by the hero embed: ${[...new Set(after)].sort().join(", ")}`);
+});
+
+test("a phone loads no third party at all", async ({ page }) => {
+  const hosts: string[] = [];
+  page.on("request", (request) => {
+    const host = new URL(request.url()).hostname;
+    if (!["localhost", "127.0.0.1"].includes(host)) hosts.push(host);
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  expect(external, `unexpected third-party requests: ${external.join(", ")}`).toHaveLength(0);
+  expect([...new Set(hosts)], "phones must stay first-party").toHaveLength(0);
 });

@@ -4,34 +4,38 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Campaign } from "@/lib/content/types";
 
 /**
- * The optional atmospheric loop, layered over the hero still.
+ * Optional hero motion, layered over the still.
  *
  * Every rule here is from design.md §7B, and each is a decision not to let the
  * enhancement damage the page:
  *
- *  - The still underneath is server-rendered and never removed, so a loop that
- *    is blocked, throttled or broken leaves a composed hero rather than a black
- *    rectangle.
- *  - The video is requested only AFTER the load event. It never competes with
- *    the content a visitor came for.
+ *  - The still underneath is server-rendered and never removed, so media that
+ *    is blocked, throttled, consent-refused or simply broken leaves a composed
+ *    hero rather than a black rectangle.
+ *  - Nothing is requested until AFTER the load event. The hero never competes
+ *    with the content a visitor came for.
  *  - Skipped entirely under reduced motion, under Save-Data, and on phones.
- *  - No audio track exists in the file, and it is muted regardless.
+ *  - Muted, always. The hosted loop has no audio track at all.
  *  - A real, labelled pause control — not a hidden gesture.
  *  - Playback stops when the hero scrolls out of view, and does not resume if
  *    the visitor paused it deliberately.
+ *
+ * The YouTube path additionally tears the iframe out of the DOM when paused,
+ * which is the only reliable way to stop a third-party player without pulling
+ * in their API script.
  */
 export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
   const [allowed, setAllowed] = useState(false);
   const [ready, setReady] = useState(false);
   const [pausedByUser, setPausedByUser] = useState(false);
+  const [onScreen, setOnScreen] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
 
   const video = campaign.video;
-  const hasVideo = Boolean(video && video.sources.length > 0);
 
   useEffect(() => {
-    if (!hasVideo) return undefined;
+    if (!video) return undefined;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const desktop = window.matchMedia("(min-width: 64rem)");
@@ -50,41 +54,35 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
       reduced.removeEventListener("change", decide);
       desktop.removeEventListener("change", decide);
     };
-  }, [hasVideo]);
+  }, [video]);
 
   useEffect(() => {
     const frame = frameRef.current;
-    const element = videoRef.current;
-    if (!allowed || !frame || !element) return undefined;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) element.pause();
-        else if (!pausedByUser) void element.play().catch(() => undefined);
-      },
-      { threshold: 0.15 },
-    );
+    if (!allowed || !frame) return undefined;
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), {
+      threshold: 0.15,
+    });
     observer.observe(frame);
     return () => observer.disconnect();
-  }, [allowed, pausedByUser]);
+  }, [allowed]);
 
-  const toggle = useCallback(() => {
+  // The hosted <video> is paused in place; the embed is unmounted below.
+  useEffect(() => {
     const element = videoRef.current;
     if (!element) return;
-    if (element.paused) {
-      setPausedByUser(false);
-      void element.play().catch(() => undefined);
-    } else {
-      element.pause();
-      setPausedByUser(true);
-    }
-  }, []);
+    if (!onScreen || pausedByUser) element.pause();
+    else void element.play().catch(() => undefined);
+  }, [onScreen, pausedByUser]);
 
-  if (!hasVideo) return null;
+  const toggle = useCallback(() => setPausedByUser((paused) => !paused), []);
+
+  if (!video) return null;
+
+  const playing = allowed && !pausedByUser && onScreen;
 
   return (
     <div ref={frameRef} className="absolute inset-0">
-      {allowed ? (
+      {video.kind === "file" && allowed ? (
         <video
           ref={videoRef}
           className={`absolute inset-0 hidden h-full w-full object-cover transition-opacity duration-700 lg:block ${
@@ -92,8 +90,7 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
           }`}
           // No poster attribute on purpose: the art-directed still is already
           // painted underneath, and the video only fades in once it can play.
-          // Setting one here just downloads the same frame a second time
-          // (measured at 40 KB) for something no one ever sees.
+          // Setting one here just downloads the same frame a second time.
           muted
           loop
           playsInline
@@ -107,13 +104,40 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
             setReady(false);
           }}
         >
-          {video!.sources.map((source) => (
+          {video.sources.map((source) => (
             <source key={source.src} src={source.src} type={source.type} />
           ))}
         </video>
       ) : null}
 
-      {allowed && ready ? (
+      {video.kind === "youtube" && playing ? (
+        // 16:9 scaled to cover the hero. Pointer events are off: this is
+        // scenery, and every real control on the page belongs to us.
+        <div
+          className="pointer-events-none absolute inset-0 hidden overflow-hidden [container-type:size] lg:block"
+          aria-hidden="true"
+        >
+          <iframe
+            title=""
+            aria-hidden="true"
+            tabIndex={-1}
+            onLoad={() => setReady(true)}
+            // Cover, in container units rather than viewport units: the hero is
+            // 82svh, so vw/vh maths pillarboxes the player. The extra scale
+            // pushes YouTube's own furniture — captions along the bottom, the
+            // logo in the corner — outside the visible crop.
+            className={`absolute left-1/2 top-1/2 h-[56.25cqw] max-h-none w-[100cqw] min-w-[177.78cqh] -translate-x-1/2 -translate-y-1/2 scale-[1.28] transition-opacity duration-700 ${
+              ready ? "opacity-100" : "opacity-0"
+            }`}
+            src={youtubeBackgroundUrl(video.ids)}
+            allow="autoplay; encrypted-media"
+            referrerPolicy="strict-origin-when-cross-origin"
+            frameBorder="0"
+          />
+        </div>
+      ) : null}
+
+      {allowed ? (
         <button
           type="button"
           onClick={toggle}
@@ -127,4 +151,30 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
       ) : null}
     </div>
   );
+}
+
+/**
+ * Background-embed parameters.
+ *
+ * `youtube-nocookie.com` defers YouTube's tracking cookies until playback, and
+ * `loop` needs an explicit `playlist` — with several ids that same parameter is
+ * what turns the hero into a montage, played by YouTube rather than cut by us.
+ */
+function youtubeBackgroundUrl(ids: string[]): string {
+  const [first, ...rest] = ids;
+  const params = new URLSearchParams({
+    autoplay: "1",
+    mute: "1",
+    controls: "0",
+    loop: "1",
+    playlist: (rest.length > 0 ? rest : [first]).join(","),
+    playsinline: "1",
+    rel: "0",
+    disablekb: "1",
+    modestbranding: "1",
+    iv_load_policy: "3",
+    cc_load_policy: "0",
+    fs: "0",
+  });
+  return `https://www.youtube-nocookie.com/embed/${first}?${params.toString()}`;
 }

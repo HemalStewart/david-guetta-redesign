@@ -16,9 +16,9 @@ This records what was actually run. Anything not run is listed under
 | --- | --- |
 | `npm run typecheck` (`tsc --noEmit`) | **Pass** — no errors |
 | `npm run lint` (`eslint`) | **Pass** — 0 errors, 0 warnings |
-| `npm test` (`node --test`) | **Pass** — 46 tests, 12 suites, 0 failures |
+| `npm test` (`node --test`) | **Pass** — 47 tests, 12 suites, 0 failures |
 | `npm run build` | **Pass** — 17 routes generated |
-| `npm run test:e2e` (`playwright test`) | **Pass** — 68 tests, 0 failures |
+| `npm run test:e2e` (`playwright test`) | **Pass** — 71 tests, 0 failures |
 | `node tests/tools/contrast.mjs` | Ran; results below |
 
 Route output from the production build:
@@ -34,7 +34,7 @@ Route output from the production build:
 
 ---
 
-## Unit tests — 46 passing
+## Unit tests — 47 passing
 
 `tests/unit/`, run on the real source modules with an injected clock.
 
@@ -97,7 +97,7 @@ Route output from the production build:
 
 ---
 
-## Interaction tests — 68 passing
+## Interaction tests — 71 passing
 
 `tests/e2e/`, against the production build.
 
@@ -171,14 +171,21 @@ Route output from the production build:
 - Under `prefers-reduced-motion: reduce`, `animationName` is `none` on the H1
   and on every animated wrapper.
 
-**Hero video** (5)
-- With `hero-loop.*` requests aborted outright, the H1, the primary CTA and the
-  poster still render — the loop can never become a precondition.
-- **No video file is requested on a 390 px viewport.**
-- **No video file is requested under `prefers-reduced-motion: reduce`.**
-- On desktop the loop is muted, loops, autoplays, and exposes a labelled
-  "Pause background" control that actually pauses it.
-- Scrolling the hero out of view pauses playback.
+**Hero video** (7)
+- With every media path aborted — the hosted loop and the embed — the H1, the
+  primary CTA and the poster still render. Media can never become a
+  precondition for a usable hero.
+- **Nothing is requested on a 390 px viewport**: no video file, no third party.
+- **Nothing is requested under `prefers-reduced-motion: reduce`.**
+- On desktop the embed is muted, has controls suppressed, loops, and carries a
+  playlist of more than one clip — the montage is assembled by YouTube, never
+  by cutting the footage ourselves.
+- The embed is served from `youtube-nocookie.com`, never `www.youtube.com`.
+- The frame is `aria-hidden` with `tabindex="-1"`: scenery, not content, and
+  not a keyboard trap.
+- "Pause background" removes the third-party frame from the DOM entirely, and
+  scrolling away tears it down — the only reliable way to stop a third-party
+  player without loading their API script.
 
 **Responsive integrity**
 - No horizontal overflow on `/`, `/live`, `/music`, a long-titled release
@@ -209,9 +216,16 @@ client bundle in the process. The `<video poster>` attribute was also dropped:
 the still is already painted underneath and the video only fades in once it can
 play, so the poster attribute just re-downloaded the same frame (40 KB) for
 something no one sees.
-- **Zero third-party requests** on first load — no player, font CDN, social
-  embed or analytics beacon. The YouTube iframe is created only on click, so
-  simply loading the homepage contacts nothing but the origin.
+- **Nothing third-party loads before the load event**, so no outside host can
+  delay the first paint. **A phone loads no third party at all.**
+- After load, the desktop hero embed pulls in **seven** Google/YouTube domains:
+  `www.youtube-nocookie.com`, `rr*.googlevideo.com`, `i.ytimg.com`,
+  `www.gstatic.com`, `fonts.gstatic.com`, `jnn-pa.googleapis.com` and
+  `www.google.com`. The test allows exactly that family and fails on anything
+  else, and prints the measured list on every run. This footprint is the
+  argument for consent gating — see the launch checklist.
+- Streaming the hero montage adds roughly **2.9 MB after load** on desktop.
+  None of it is on the critical path, and none of it is requested on phones.
 
 Two honest caveats on this measurement. `next start` optimises images on
 demand, so the first request for a size is larger and slower than the cached

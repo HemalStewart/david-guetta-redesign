@@ -103,16 +103,13 @@ test("404 @ 1440px", async ({ page }) => {
   await page.screenshot({ path: `${DIR}/not-found-1440.png` });
 });
 
-test("hero with the loop playing @ 1440px", async ({ page }) => {
+test("hero with the music-video embed @ 1440px", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await page.waitForLoadState("load");
-  await page.locator("video").waitFor();
-  // Let the loop reach a frame with the beams well separated.
-  await page.evaluate(() => {
-    const video = document.querySelector("video");
-    if (video) video.currentTime = 2.4;
-  });
-  await page.waitForTimeout(900);
+  await page.locator('iframe[src*="youtube"]').waitFor();
+  // Give the embed time to start; a cold frame is just black.
+  // The player shows its own controls for a few seconds after starting.
+  await page.waitForTimeout(9000);
   await page.screenshot({ path: `${DIR}/hero-video-1440.png` });
 });

@@ -76,17 +76,41 @@ export type Campaign = {
   mobileImage: MaybeImage;
   placeholder: PlaceholderVariant;
   /**
-   * Optional approved atmospheric loop. The poster always renders first and
-   * the video is an enhancement on top of it — see HeroMedia for the rules.
-   * Sources are offered in order, so put the smallest format first.
+   * Optional hero motion. Two kinds, because they carry very different costs:
+   *
+   *  "file"    — video we host. No third party, no cookies, full control.
+   *  "youtube" — official footage played by YouTube's own embed. The only
+   *              lawful way to put the artist's music videos in the hero:
+   *              nothing is downloaded or re-hosted, and views still count to
+   *              the artist. It costs third-party requests and cookies, so it
+   *              needs consent gating before launch.
+   *
+   * Either way the poster renders first and the still underneath is never
+   * removed, so blocked or failed media leaves a composed hero.
    */
-  video: {
-    sources: { src: string; type: string }[];
-    /** Must visually match the campaign image, or the swap is jarring. */
-    poster: string;
-    /** Seconds. Kept short per design.md §7B (6–10 s). */
-    durationSeconds: number;
-  } | null;
+  video:
+    | {
+        kind: "file";
+        /** Offered in order, so put the smallest format first. */
+        sources: { src: string; type: string }[];
+        /** Must visually match the campaign image, or the swap is jarring. */
+        poster: string;
+        /** Seconds. Kept short per design.md §7B (6–10 s). */
+        durationSeconds: number;
+      }
+    | {
+        kind: "youtube";
+        /**
+         * Played in order and looped. The first id is the embed; the rest
+         * become its playlist, which is how a montage is assembled without
+         * cutting or re-encoding anything.
+         */
+        ids: string[];
+        /** Local still, so the hero is composed before any third party loads. */
+        poster: string;
+      }
+    | null;
+
   primaryAction: ExternalLink;
   secondaryAction: ExternalLink | null;
   caption: string | null;

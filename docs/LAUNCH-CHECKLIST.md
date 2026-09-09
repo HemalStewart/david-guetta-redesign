@@ -96,7 +96,15 @@ Nothing here can be resolved by the build team alone.
       "Draft placeholder — not legal copy" and this blocks launch outright.
 - [ ] **Copyright holder / legal entity** for the footer
 - [ ] **Newsletter consent wording**, approved
-- [ ] **Approved stage footage** to replace the original generated loop —
+- [ ] **Consent gating for the hero embed**, or the master files to self-host
+      instead. The embed pulls in seven Google/YouTube domains; the rest of the
+      site makes zero third-party requests. **Blocking in the EU/UK.**
+- [ ] **Master files for the hero videos**, if self-hosting. Better quality than
+      a YouTube copy and removes the consent question entirely. Do not download
+      from YouTube — that breaches their terms regardless of who owns the video.
+- [ ] Confirmation of the four clips in the hero montage, and whether the order
+      should reflect popularity (no view-count data was used)
+- [ ] **Approved stage footage** if the generated loop is used instead —
       6–10 s, silent, no strobe, with a poster frame that matches it
 - [ ] A decision on which hero leads: the atmospheric loop (active) or the
       photograph (`portraitCampaign`, one line away)
