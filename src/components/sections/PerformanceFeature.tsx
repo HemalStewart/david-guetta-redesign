@@ -16,7 +16,7 @@ export function PerformanceFeature({ video, settings }: { video: Video | null; s
     <section aria-labelledby="performance-heading" className="border-t border-rule-dark bg-ink">
       <Container className="py-16 md:py-24 lg:py-32">
         <div>
-          <div className="flex flex-wrap items-end justify-between gap-6">
+          <div className="scroll-in flex flex-wrap items-end justify-between gap-6">
             <div>
               <SectionLabel index="03" label="Watch" />
               <h2 id="performance-heading" className="type-display mt-4 text-5xl leading-[0.92] md:text-6xl lg:text-7xl">
@@ -24,7 +24,7 @@ export function PerformanceFeature({ video, settings }: { video: Video | null; s
               </h2>
             </div>
             <ButtonLink href="/watch" variant="quiet-dark">
-              All videos <span aria-hidden="true">→</span>
+              All videos <span aria-hidden="true" className="arrow-shift">→</span>
             </ButtonLink>
           </div>
 

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { djMagNumberOneYears, selectedAwards } from "../../src/content/awards.ts";
 import { demoEvents } from "../../src/content/events.ts";
+import { storeProducts } from "../../src/content/products.ts";
 import { officialReleases } from "../../src/content/releases.ts";
 import { officialVideos } from "../../src/content/videos.ts";
 import { activeCampaign } from "../../src/content/campaign.ts";
@@ -10,7 +12,9 @@ import {
   assertInternalHref,
   assertSafeUrl,
   ContentError,
+  validateAwards,
   validateEvents,
+  validateProducts,
   validateReleases,
   validateVideos,
 } from "../../src/lib/content/validate.ts";
@@ -95,8 +99,81 @@ describe("shipped fixtures", () => {
   it("has no dead navigation entries", () => {
     for (const item of siteSettings.nav) {
       assert.notEqual(item.href, "#");
-      assert.ok(item.href.startsWith("/"), `${item.href} is not a real route`);
+      if (item.external) {
+        assert.doesNotThrow(() => assertSafeUrl(item.href, `nav ${item.label}`));
+      } else {
+        assert.ok(item.href.startsWith("/"), `${item.href} is not a real route`);
+      }
     }
+  });
+
+  it("only advertises the shop while a store URL is confirmed", () => {
+    const shop = siteSettings.nav.find((item) => item.label === "Shop");
+    if (siteSettings.storeUrl) {
+      assert.ok(shop, "a confirmed store must appear in the navigation");
+      assert.equal(shop?.href, siteSettings.storeUrl);
+      assert.equal(shop?.external, true);
+    } else {
+      assert.equal(shop, undefined, "the shop must not appear without a confirmed store");
+    }
+  });
+});
+
+describe("awards", () => {
+  it("pass validation and are all wins with a traceable source", () => {
+    assert.doesNotThrow(() => validateAwards(selectedAwards));
+    for (const award of selectedAwards) {
+      assert.ok(award.sourceUrl.startsWith("https://"), award.id);
+      assert.equal(award.approval, "pending-approval", `${award.id} claims approval it does not have`);
+    }
+  });
+
+  it("reject an implausible ceremony year", () => {
+    assert.throws(() => validateAwards([{ ...selectedAwards[0], year: 1492 }]), ContentError);
+    assert.throws(() => validateAwards([{ ...selectedAwards[0], year: 2999 }]), ContentError);
+  });
+
+  it("reject an award with no source to check it against", () => {
+    assert.throws(
+      () => validateAwards([{ ...selectedAwards[0], sourceUrl: "" }]),
+      ContentError,
+    );
+  });
+
+  it("state DJ Mag number-one years rather than a derived total", () => {
+    assert.ok(djMagNumberOneYears.length > 0);
+    for (const year of djMagNumberOneYears) {
+      assert.ok(Number.isInteger(year) && year > 1990 && year <= new Date().getFullYear(), String(year));
+    }
+  });
+});
+
+describe("store products", () => {
+  it("pass validation and link to the official store", () => {
+    assert.doesNotThrow(() => validateProducts(storeProducts));
+    for (const product of storeProducts) {
+      assert.ok(product.storeUrl.startsWith("https://store.davidguetta.com/"), product.id);
+      assert.equal(product.approval, "pending-approval");
+    }
+  });
+
+  it("never show a price without a currency and a read time", () => {
+    assert.throws(
+      () => validateProducts([{ ...storeProducts[0], currency: null }]),
+      ContentError,
+    );
+    assert.throws(
+      () => validateProducts([{ ...storeProducts[0], verifiedAt: null }]),
+      ContentError,
+    );
+  });
+
+  it("reject a price that is not a plain amount", () => {
+    assert.throws(() => validateProducts([{ ...storeProducts[0], price: "from 29" }]), ContentError);
+  });
+
+  it("reject an unknown availability value", () => {
+    assert.throws(() => validateProducts([{ ...storeProducts[0], availability: "selling fast" }]), ContentError);
   });
 });
 

@@ -23,7 +23,7 @@ export function LivePreview({
   return (
     <section aria-labelledby="live-preview-heading" className="bg-ink">
       <Container className="py-16 md:py-24 lg:py-32">
-        <div>
+        <div className="scroll-in">
           <SectionLabel index="02" label="Live" />
           <h2 id="live-preview-heading" className="type-display mt-4 text-5xl leading-[0.92] md:text-6xl lg:text-7xl">
             See you out there.
@@ -55,7 +55,7 @@ export function LivePreview({
               <EventList events={result.data.slice(0, limit)} className="mt-12" />
               <div className="mt-10">
                 <ButtonLink href="/live" variant="outline-dark">
-                  All shows <span aria-hidden="true">→</span>
+                  All shows <span aria-hidden="true" className="arrow-shift">→</span>
                 </ButtonLink>
               </div>
             </>

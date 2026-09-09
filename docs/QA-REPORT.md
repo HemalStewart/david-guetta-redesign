@@ -16,9 +16,9 @@ This records what was actually run. Anything not run is listed under
 | --- | --- |
 | `npm run typecheck` (`tsc --noEmit`) | **Pass** — no errors |
 | `npm run lint` (`eslint`) | **Pass** — 0 errors, 0 warnings |
-| `npm test` (`node --test`) | **Pass** — 36 tests, 10 suites, 0 failures |
+| `npm test` (`node --test`) | **Pass** — 45 tests, 12 suites, 0 failures |
 | `npm run build` | **Pass** — 17 routes generated |
-| `npm run test:e2e` (`playwright test`) | **Pass** — 54 tests, 0 failures |
+| `npm run test:e2e` (`playwright test`) | **Pass** — 62 tests, 0 failures |
 | `node tests/tools/contrast.mjs` | Ran; results below |
 
 Route output from the production build:
@@ -34,7 +34,7 @@ Route output from the production build:
 
 ---
 
-## Unit tests — 36 passing
+## Unit tests — 45 passing
 
 `tests/unit/`, run on the real source modules with an injected clock.
 
@@ -76,6 +76,20 @@ Route output from the production build:
   whitespace as no filter.
 - Region and text filters combine correctly.
 
+**Awards** (4)
+- The shipped list validates; every entry is `pending-approval` with an https
+  source URL.
+- An implausible ceremony year (1492, 2999) is rejected.
+- An award with no source URL is rejected.
+- DJ Mag number-one years are stated as years, and each is a plausible integer.
+
+**Store products** (4)
+- The shipped products validate and all link to `store.davidguetta.com`.
+- A price without a currency is rejected; a price without `verifiedAt` is
+  rejected. A price can never be displayed without both.
+- A price that is not a plain amount ("from 29") is rejected.
+- An unknown availability value ("selling fast") is rejected.
+
 **Newsletter** (5)
 - Email validation accepts ordinary addresses and rejects six malformed cases.
 - Rate limiting allows a burst of 5 then blocks, resets after the window, and
@@ -83,7 +97,7 @@ Route output from the production build:
 
 ---
 
-## Interaction tests — 54 passing
+## Interaction tests — 62 passing
 
 `tests/e2e/`, against the production build.
 
@@ -134,6 +148,29 @@ Route output from the production build:
 - `POST /api/newsletter` with a valid body returns `unconfigured`, never
   `subscribed`.
 
+**Store**
+- Shop appears in the primary navigation as a real external anchor with
+  `target="_blank"` and `rel="noopener"`.
+- Product tiles link to `store.davidguetta.com/products/…`.
+- **No add-to-cart, checkout or buy control exists anywhere on the site** —
+  asserted, because the store owns the transaction.
+- Every displayed price carries its currency, and the read date is stated.
+
+**Recognition**
+- Wins render with their years, and the section states that it is a selection,
+  excludes nominations, and awaits confirmation by management.
+- The DJ Mag line shows years; a derived "5× number one"-style claim is
+  asserted **absent**.
+
+**Motion** (3, and the reason they exist)
+- Every homepage section — located by its `aria-labelledby` id, not its
+  wording — is visible with real height and full opacity **without being
+  scrolled to**.
+- Every `.scroll-in` wrapper reads back an opacity above 0.9 before any
+  scrolling happens.
+- Under `prefers-reduced-motion: reduce`, `animationName` is `none` on the H1
+  and on every animated wrapper.
+
 **Responsive integrity**
 - No horizontal overflow on `/`, `/live`, `/music`, a long-titled release
   detail, `/watch` and `/contact` at **360, 390, 768, 1024 and 1440 px**.
@@ -141,8 +178,12 @@ Route output from the production build:
 - Hero CTAs and the Menu button are ≥44 px.
 
 **Page weight** (production build, local network, real photography in place)
-- `/` at 1440 px: **364–536 KB across 27 requests** over three runs.
-- `/` at 390 px: **328–330 KB across 22 requests** — stable.
+- `/` at 1440 px: **467 KB across 27 requests** after the store and recognition
+  sections were added (364–536 KB before).
+- `/` at 390 px: **417 KB across 22 requests**.
+
+Request counts did not change when two sections were added: store and video
+imagery is below the fold and lazy-loaded, so it costs nothing on first view.
 - **Zero third-party requests** on first load — no player, font CDN, social
   embed or analytics beacon. The YouTube iframe is created only on click, so
   simply loading the homepage contacts nothing but the origin.
@@ -246,6 +287,8 @@ In `docs/screenshots/`, regenerate with `npm run screenshots`.
 | A cross-month date range overflowed its column | Ranges now break after the dash across two lines. |
 | Two contrast failures (see above) | New `signal-ink` and `control-*` tokens. |
 | Inter 600 was loaded but never used | Removed from the font load. |
+| The scroll-linked reveal animated opacity, leaving every below-the-fold section at opacity 0 until scrolled — the same class of bug as the JS reveal removed earlier | Scroll animation made transform-only; three tests added to lock it in. |
+| Store product images rendered as blank squares in full-page captures — 1.3 MB transparent PNGs that the on-demand optimiser had not finished processing, and which a `fullPage` capture never requests because it does not scroll | Sources downscaled to 1200 px, and the screenshot helper now walks the page to trigger lazy loads before capturing. |
 | The page-weight test warmed and measured in the same page, so it reported a browser-cache figure (67 KB) that no visitor would ever see | Measurement moved to a fresh browser context after warming. |
 | `networkidle` never settled on image-heavy routes at 390 px, hanging the screenshot run | Switched to `load` plus a settle beat. |
 | Release placeholders were generated sleeves; real artwork was available on the client's own site | Replaced with the real catalogue (see below). |
@@ -254,6 +297,25 @@ In `docs/screenshots/`, regenerate with `npm run screenshots`.
 | The demo notice claimed everything was placeholder content, which stopped being true | Rewritten to separate uncleared real assets from invented show dates. |
 
 ---
+
+## Motion — what was added, and what the tests caught
+
+Added this pass: a staggered hero entrance on load, a scroll-linked settle on
+section headings, artwork scale inside its clipped frame on hover, and a 2 px
+arrow shift on primary actions. All of it is CSS, all of it inside
+`prefers-reduced-motion: no-preference`, and the scroll-linked part is
+additionally behind `@supports (animation-timeline: view())`.
+
+The first implementation animated **opacity** on that scroll timeline. The new
+test failed immediately: a `view()` timeline sits at progress 0 for anything
+not yet scrolled into view, so every below-the-fold section rendered at opacity
+0 — invisible in a full-document capture, in print, and to any reader that
+never scrolls. This is the *second* time this project produced that bug; the
+first was a JavaScript IntersectionObserver in the original build.
+
+The fix was to make the scroll-linked animation **transform-only**. It can move
+content a few pixels; it cannot hide it. The three motion tests above now lock
+that in, and the CSS carries a comment saying why.
 
 ## Assets sourced from the live site
 
@@ -274,6 +336,16 @@ full in `ASSET-MANIFEST.md`; what matters for QA:
   widget; `events.ts` remains invented fixtures.
 - The source's duplicate "I'm Good (Blue)" entry (identical artwork, same
   Spotify album) was dropped.
+
+Added on the second pass:
+
+- 13 videos (up from 7), each re-confirmed through oEmbed.
+- 4 products from the official Shopify feed at `store.davidguetta.com`, with
+  live prices, currency and stock. Product PNGs were downscaled from 1772 px to
+  1200 px, roughly halving each file.
+- 8 award wins and the DJ Mag number-one years, parsed from the rendered
+  Wikipedia table with rowspans resolved. **Rights and accuracy unverified;
+  management confirmation is a blocking launch item.**
 
 ## Not verified
 

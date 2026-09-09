@@ -273,3 +273,113 @@ test.describe("responsive integrity", () => {
     expect(menu!.width).toBeGreaterThanOrEqual(44);
   });
 });
+
+test.describe("motion never hides content", () => {
+  /**
+   * Regression guard. An earlier JS reveal-on-scroll left whole sections blank
+   * in a full-page render — visually broken, and invisible to anyone whose
+   * observer never fired. The replacement is CSS-only and additive, and this
+   * asserts it stays that way: every homepage section must be visible and have
+   * real height when the whole document is rendered at once.
+   */
+  // Located by the ids each section points its aria-labelledby at, so the
+  // test does not break every time a headline is reworded.
+  const SECTION_IDS = [
+    "next-show-heading",
+    "featured-release-heading",
+    "live-preview-heading",
+    "performance-heading",
+    "store-heading",
+    "recognition-heading",
+    "updates-heading",
+  ];
+
+  test("every homepage section renders without being scrolled to", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+
+    for (const id of SECTION_IDS) {
+      const node = page.locator(`#${id}`);
+      await expect(node, id).toBeVisible();
+      const box = await node.boundingBox();
+      expect(box!.height, `${id} has no height`).toBeGreaterThan(0);
+      const opacity = await node.evaluate((el) => {
+        let current: HTMLElement | null = el as HTMLElement;
+        let lowest = 1;
+        while (current) {
+          lowest = Math.min(lowest, Number(getComputedStyle(current).opacity));
+          current = current.parentElement;
+        }
+        return lowest;
+      });
+      expect(opacity, `${id} is transparent`).toBeGreaterThan(0.9);
+    }
+  });
+
+  test("below-the-fold sections are not left transparent before scrolling", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+
+    // Read every animated wrapper without scrolling to it first.
+    const opacities = await page.$$eval(".scroll-in", (nodes) =>
+      nodes.map((node) => Number(getComputedStyle(node).opacity)),
+    );
+    expect(opacities.length).toBeGreaterThan(0);
+    for (const opacity of opacities) expect(opacity).toBeGreaterThan(0.9);
+  });
+
+  test("reduced motion disables the entrance animations entirely", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const names = await page.$$eval("h1, .scroll-in", (nodes) =>
+      nodes.map((node) => getComputedStyle(node).animationName),
+    );
+    for (const name of names) expect(name).toBe("none");
+  });
+});
+
+test.describe("store", () => {
+  test("the shop is reachable from the primary navigation as an external link", async ({ page }) => {
+    await page.goto("/");
+    const shop = page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: /Shop/ });
+    await expect(shop).toHaveAttribute("href", "https://store.davidguetta.com");
+    await expect(shop).toHaveAttribute("target", "_blank");
+    await expect(shop).toHaveAttribute("rel", /noopener/);
+  });
+
+  test("products link out to the store and never offer checkout here", async ({ page }) => {
+    await page.goto("/");
+    const product = page.getByRole("link", { name: /on the official store$/ }).first();
+    await expect(product).toHaveAttribute("href", /^https:\/\/store\.davidguetta\.com\/products\//);
+    // No basket, no checkout, no payment field anywhere on this site.
+    await expect(page.getByRole("button", { name: /add to (cart|basket)|checkout|buy now/i })).toHaveCount(0);
+  });
+
+  test("a price is always shown with its currency", async ({ page }) => {
+    await page.goto("/");
+    const store = page.locator("section", { has: page.locator("#store-heading") });
+    await expect(store.getByText(/€\d/).first()).toBeVisible();
+    await expect(store.getByText(/read from the official store/)).toBeVisible();
+  });
+});
+
+test.describe("recognition", () => {
+  test("lists wins with years and says it is a selection", async ({ page }) => {
+    await page.goto("/");
+    const section = page.locator("section", { has: page.locator("#recognition-heading") });
+    await expect(section.getByRole("heading", { name: "Grammy Awards" }).first()).toBeVisible();
+    await expect(section.getByText(/A selection of competitive wins, not a complete list/)).toBeVisible();
+    await expect(section.getByText(/awaiting confirmation by management/)).toBeVisible();
+  });
+
+  test("states DJ Mag number-one years rather than a headline total", async ({ page }) => {
+    await page.goto("/");
+    const section = page.locator("section", { has: page.locator("#recognition-heading") });
+    await expect(section.getByText("DJ Mag Top 100 — number one")).toBeVisible();
+    // A count like "5x number one" would be a derived claim; years are checkable.
+    await expect(section.getByText(/\d+\s*[×x]\s*number one/i)).toHaveCount(0);
+  });
+});

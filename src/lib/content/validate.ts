@@ -4,7 +4,7 @@
  * Runs at module load (server/build time) so bad fixtures or a bad CMS payload
  * fail loudly instead of rendering a broken or misleading page.
  */
-import type { LiveEvent, Release, Video } from "./types";
+import type { Award, LiveEvent, ProductTeaser, Release, Video } from "./types";
 
 export class ContentError extends Error {
   constructor(message: string) {
@@ -139,6 +139,51 @@ export function validateVideos(videos: Video[]): Video[] {
     throw new ContentError(`videos: ${featured.length} videos are flagged featured; exactly one may be`);
   }
   return videos;
+}
+
+/**
+ * Awards are factual claims about a real person, so the checks are strict:
+ * a plausible year, no empty fields, and a source URL on every entry so any
+ * claim can be traced back before it is approved.
+ */
+export function validateAwards(awards: Award[]): Award[] {
+  assertUniqueIds(awards, "awards");
+  const thisYear = new Date().getFullYear();
+  for (const award of awards) {
+    if (!Number.isInteger(award.year) || award.year < 1980 || award.year > thisYear + 1) {
+      throw new ContentError(`award ${award.id}: ${award.year} is not a plausible ceremony year`);
+    }
+    if (!award.organisation.trim()) throw new ContentError(`award ${award.id}: organisation is required`);
+    if (!award.category.trim()) throw new ContentError(`award ${award.id}: category is required`);
+    if (award.work !== null && !award.work.trim()) {
+      throw new ContentError(`award ${award.id}: work must be a real title or null`);
+    }
+    assertSafeUrl(award.sourceUrl, `award ${award.id} sourceUrl`);
+  }
+  return awards;
+}
+
+/**
+ * A price may only be shown alongside its currency and the time it was read,
+ * so the UI can never display a bare number of unknown provenance or age.
+ */
+export function validateProducts(products: ProductTeaser[]): ProductTeaser[] {
+  assertUniqueIds(products, "products");
+  for (const product of products) {
+    if (!product.title.trim()) throw new ContentError(`product ${product.id}: title is required`);
+    assertSafeUrl(product.storeUrl, `product ${product.id} storeUrl`);
+    if (product.price !== null) {
+      if (!/^\d+(\.\d{1,2})?$/.test(product.price)) {
+        throw new ContentError(`product ${product.id}: price "${product.price}" is not a plain amount`);
+      }
+      if (!product.currency) throw new ContentError(`product ${product.id}: a price requires a currency`);
+      if (!product.verifiedAt) throw new ContentError(`product ${product.id}: a price requires verifiedAt`);
+    }
+    if (product.availability && !["in-stock", "out-of-stock"].includes(product.availability)) {
+      throw new ContentError(`product ${product.id}: unknown availability "${product.availability}"`);
+    }
+  }
+  return products;
 }
 
 export function isValidTimeZone(timeZone: string): boolean {

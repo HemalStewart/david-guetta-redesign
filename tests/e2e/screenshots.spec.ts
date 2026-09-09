@@ -14,6 +14,19 @@ const WIDTHS = [
   { name: "1440", width: 1440, height: 900 },
 ];
 
+/** Forces every lazy-loaded image to be requested before a fullPage capture. */
+async function scrollThrough(page: import("@playwright/test").Page) {
+  await page.evaluate(async () => {
+    const step = window.innerHeight * 0.8;
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((resolve) => setTimeout(resolve, 90));
+    }
+    window.scrollTo(0, 0);
+  });
+  await page.waitForTimeout(400);
+}
+
 const ROUTES = [
   { name: "home", path: "/" },
   { name: "live", path: "/live" },
@@ -34,6 +47,9 @@ for (const width of WIDTHS) {
       // "load" plus a settle beat: networkidle can hang on image-heavy routes
       // where the optimiser is still streaming variants.
       await page.waitForLoadState("load");
+      // A fullPage capture does not scroll, so lazy images below the fold are
+      // never requested. Walk the page first, then return to the top.
+      await scrollThrough(page);
       await page.waitForTimeout(1200);
       await page.screenshot({ path: `${DIR}/${route.name}-${width.name}.png`, fullPage: true });
     });
@@ -76,6 +92,7 @@ test("home at 200% text zoom @ 1440px", async ({ page }) => {
   await page.setViewportSize({ width: 720, height: 450 });
   await page.goto("/");
   await page.waitForLoadState("load");
+  await scrollThrough(page);
   await page.waitForTimeout(1200);
   await page.screenshot({ path: `${DIR}/home-zoom200.png`, fullPage: true });
 });

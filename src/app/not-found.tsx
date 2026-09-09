@@ -11,7 +11,7 @@ export default function NotFound() {
       </p>
       <div className="mt-10 flex flex-col gap-4 sm:flex-row">
         <ButtonLink href="/live" variant="primary">
-          View shows <span aria-hidden="true">→</span>
+          View shows <span aria-hidden="true" className="arrow-shift">→</span>
         </ButtonLink>
         <ButtonLink href="/music" variant="outline-dark">
           Explore music

@@ -181,6 +181,27 @@ export type Video = {
   approval: ApprovalStatus;
 };
 
+/**
+ * A single competitive award result.
+ *
+ * Only wins are modelled. This is factual biography about a living person, so
+ * every entry carries the page it was read from and nothing is derived,
+ * rounded up or summarised into a headline count.
+ */
+export type Award = {
+  id: string;
+  /** Four-digit year of the ceremony. */
+  year: number;
+  /** Awarding body, e.g. "Grammy Awards". */
+  organisation: string;
+  /** The award or category won. */
+  category: string;
+  /** The credited work, or null when the award is to the artist themselves. */
+  work: string | null;
+  sourceUrl: string;
+  approval: ApprovalStatus;
+};
+
 export type ProductTeaser = {
   id: string;
   title: string;

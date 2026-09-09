@@ -45,7 +45,7 @@ export function ReleaseCard({ release, tone = "light" }: { release: Release; ton
           seed={release.id}
           aspect="aspect-square"
           sizes="(min-width: 1024px) 30vw, (min-width: 768px) 45vw, 90vw"
-          className="transition-opacity duration-200 group-hover:opacity-90"
+          className="transition-transform duration-300 ease-out group-hover:scale-[1.02]"
         />
         {meta ? <p className={`type-meta tabular mt-4 ${muted}`}>{meta}</p> : null}
         <h3 className={`type-display text-2xl leading-[0.98] group-hover:text-signal md:text-[1.75rem] ${meta ? "mt-2" : "mt-4"}`}>

@@ -204,6 +204,87 @@ not used anywhere in the interface and should not become public copy.
 
 ---
 
+## Awards
+
+`src/content/awards.ts`. Only **wins** are modelled; there is no field for a
+nomination, on purpose.
+
+```ts
+{
+  id: "award-grammy-2011",
+  year: 2011,                       // 1980..next year, validated
+  organisation: "Grammy Awards",
+  category: "Best Remixed Recording, Non-Classical",
+  work: "Revolver (David Guetta's One Love Club Remix)",  // or null if to the artist
+  sourceUrl: "https://…",           // required — every claim must be traceable
+  approval: "pending-approval",
+}
+```
+
+Three rules to keep:
+
+- **Never derive a total.** `djMagNumberOneYears` lists the years so a reader
+  can check them. "5× number one" is a claim the site would be making itself;
+  if management wants that phrasing, they supply it.
+- **Every entry needs a `sourceUrl`.** The validator rejects entries without
+  one, so nothing can arrive unattributed.
+- Keep the list short and curated. It is a recognition band, not a discography
+  of trophies — and each extra row is another factual claim to verify.
+
+The section disappears entirely when the array is empty.
+
+## Store products
+
+`src/content/products.ts`. The whole module is conditional: with
+`siteSettings.storeUrl` set to `null`, the Shop nav item, the footer link and
+the homepage section all vanish together.
+
+```ts
+{
+  id: "prod-001",
+  title: "VARSITY JACKET",
+  image: { src: "/assets/store/teddy-collector.png", alt: "…",
+           width: 1200, height: 1200, source: "store.davidguetta.com",
+           approval: "pending-approval" },
+  placeholder: "artwork",
+  storeUrl: "https://store.davidguetta.com/products/teddy-collector",
+  price: "289.00",                  // plain amount, or null
+  currency: "EUR",                  // required whenever price is set
+  availability: "in-stock",         // or "out-of-stock", or null
+  verifiedAt: "2026-09-09",         // required whenever price is set
+  approval: "pending-approval",
+}
+```
+
+The validator refuses a price without a currency **and** a `verifiedAt`, so the
+UI can never show a bare number of unknown age. If you would rather not
+maintain prices, set `price` to `null` — the card then reads "Price on the
+store" and the section still works.
+
+This site never handles a transaction. There is no cart, no checkout and no
+payment field, and a test asserts none appears.
+
+## Motion
+
+`src/app/globals.css`, at the bottom. Four effects, all CSS, all inside
+`@media (prefers-reduced-motion: no-preference)`:
+
+| Class | Effect |
+| --- | --- |
+| `.enter` + `.enter-1…4` | Staggered fade and 18 px rise on load. Used on the hero only. |
+| `.scroll-in` | Scroll-linked settle via `animation-timeline: view()`, behind `@supports`. |
+| `.arrow-shift` | 2 px arrow nudge on hover/focus. |
+| (utility classes) | Artwork scale to 1.02–1.03 inside its clipped frame. |
+
+**The rule, if you add more:** a scroll-linked animation may move content but
+must never fade it. A `view()` timeline sits at progress 0 for anything not yet
+scrolled into view, so animating opacity leaves below-the-fold sections
+invisible in a full-page render, in print, and to any reader that never
+scrolls. This project shipped that bug twice before it was caught; three tests
+in `tests/e2e/journeys.spec.ts` now fail if it comes back.
+
+---
+
 ## Who owns freshness
 
 Assign an owner and a cadence before launch:
@@ -213,5 +294,6 @@ Assign an owner and a cadence before launch:
 | Tour dates and statuses | Weekly, plus immediately on any on-sale, cancellation or postponement |
 | Featured release / campaign | Per release cycle, with an end date agreed in advance |
 | Videos | Per upload |
-| Store link and products | Whenever the store changes |
+| Store link and products | Whenever the store changes — prices and stock in this build are a dated snapshot |
+| Awards | After each awards season, and only with management sign-off |
 | Contacts and policies | On change; reviewed annually |

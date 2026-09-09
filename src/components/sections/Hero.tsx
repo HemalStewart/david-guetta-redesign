@@ -55,7 +55,7 @@ export function Hero({ campaign }: { campaign: Campaign }) {
 
       <Container className="relative z-10 pb-12 pt-8 lg:pb-20 lg:pt-40">
         <div className="lg:ml-auto lg:max-w-[44rem] lg:text-right">
-          <h1 className="type-display text-[clamp(4.25rem,18vw,13rem)] leading-[0.86] lg:text-[clamp(6rem,11vw,11rem)]">
+          <h1 className="enter enter-1 type-display text-[clamp(4.25rem,18vw,13rem)] leading-[0.86] lg:text-[clamp(6rem,11vw,11rem)]">
             {campaign.titleLines.map((line) => (
               <span key={line} className="block">
                 {line}
@@ -63,13 +63,13 @@ export function Hero({ campaign }: { campaign: Campaign }) {
             ))}
           </h1>
 
-          <p className="mt-5 max-w-md text-base text-paper md:text-lg lg:ml-auto lg:mt-7">
+          <p className="enter enter-2 mt-5 max-w-md text-base text-paper md:text-lg lg:ml-auto lg:mt-7">
             {campaign.supportingCopy}
           </p>
 
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-10 lg:justify-end">
+          <div className="enter enter-3 mt-8 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-10 lg:justify-end">
             <ButtonLink href={campaign.primaryAction.href} variant="primary" className="sm:min-w-56 lg:order-2">
-              {campaign.primaryAction.label} <span aria-hidden="true">→</span>
+              {campaign.primaryAction.label} <span aria-hidden="true" className="arrow-shift">→</span>
             </ButtonLink>
             {campaign.secondaryAction ? (
               <ButtonLink href={campaign.secondaryAction.href} variant="quiet-dark" className="sm:ml-4 lg:order-1 lg:mr-4">

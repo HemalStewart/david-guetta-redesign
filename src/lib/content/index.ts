@@ -7,19 +7,23 @@
  * `./types.ts`, run the same validators, and keep the same return shapes.
  * No component imports `@/content/*` directly.
  */
+import { selectedAwards, djMagNumberOneYears } from "@/content/awards";
 import { activeCampaign } from "@/content/campaign";
 import { demoEvents } from "@/content/events";
+import { storeProducts } from "@/content/products";
 import { officialReleases } from "@/content/releases";
 import { siteSettings } from "@/content/site";
 import { officialVideos } from "@/content/videos";
 import { nextEvent, pastEvents, upcomingEvents } from "@/lib/dates";
-import type { Campaign, LiveEvent, Region, Release, SiteSettings, Video } from "./types";
-import { validateEvents, validateReleases, validateVideos } from "./validate";
+import type { Award, Campaign, LiveEvent, ProductTeaser, Region, Release, SiteSettings, Video } from "./types";
+import { validateAwards, validateEvents, validateProducts, validateReleases, validateVideos } from "./validate";
 
 /** Fixtures are validated once, at module load, so bad data fails loudly. */
 const releases = validateReleases(officialReleases);
 const events = validateEvents(demoEvents);
 const videos = validateVideos(officialVideos);
+const awards = validateAwards(selectedAwards);
+const products = validateProducts(storeProducts);
 
 /**
  * Distinguishes "the provider returned nothing" from "the provider failed".
@@ -121,6 +125,25 @@ export function getVideoBySlug(slug: string): Video | null {
 /** Merch is conditional: no confirmed store URL means the module is absent. */
 export function getStoreUrl(): string | null {
   return siteSettings.storeUrl;
+}
+
+/**
+ * Products are only ever surfaced alongside a confirmed store. Without a store
+ * URL the merch module does not render at all, rather than showing products
+ * with nowhere to buy them.
+ */
+export function getProducts(limit = 3): ProductTeaser[] {
+  return siteSettings.storeUrl ? products.slice(0, limit) : [];
+}
+
+/** Selected wins, most recent first. Nominations are not modelled. */
+export function getAwards(): Award[] {
+  return [...awards].sort((a, b) => b.year - a.year);
+}
+
+/** Years placed first in DJ Magazine's Top 100 DJs poll, newest first. */
+export function getDjMagNumberOneYears(): number[] {
+  return [...djMagNumberOneYears].sort((a, b) => b - a);
 }
 
 export * from "./types";

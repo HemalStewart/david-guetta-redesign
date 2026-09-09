@@ -124,17 +124,21 @@ export function Header({ settings }: { settings: SiteSettings }) {
             <ul className="flex items-center gap-8">
               {settings.nav.map((item) => {
                 const current = isCurrent(pathname, item.href);
+                const className = `type-meta inline-flex min-h-11 items-center border-b-2 pt-0.5 transition-colors ${
+                  current ? "border-signal text-paper" : "border-transparent text-muted-dark hover:text-paper"
+                }`;
                 return (
                   <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={current ? "page" : undefined}
-                      className={`type-meta inline-flex min-h-11 items-center border-b-2 pt-0.5 transition-colors ${
-                        current ? "border-signal text-paper" : "border-transparent text-muted-dark hover:text-paper"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
+                    {item.external ? (
+                      // A link off-site is a real anchor, not a client-side route.
+                      <a href={item.href} target="_blank" rel="noopener noreferrer" className={className}>
+                        {item.label} <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <Link href={item.href} aria-current={current ? "page" : undefined} className={className}>
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 );
               })}
@@ -181,15 +185,30 @@ export function Header({ settings }: { settings: SiteSettings }) {
                   const current = isCurrent(pathname, item.href);
                   return (
                     <li key={item.href} className="border-b border-rule-dark">
-                      <Link
-                        href={item.href}
-                        onClick={closeMenu}
-                        aria-current={current ? "page" : undefined}
-                        className="type-display flex items-center justify-between py-5 text-5xl"
-                      >
-                        {item.label}
-                        {current ? <span className="type-meta text-signal">Current</span> : null}
-                      </Link>
+                      {item.external ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={closeMenu}
+                          className="type-display flex items-center justify-between py-5 text-5xl"
+                        >
+                          {item.label}
+                          <span aria-hidden="true" className="text-signal">
+                            ↗
+                          </span>
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          onClick={closeMenu}
+                          aria-current={current ? "page" : undefined}
+                          className="type-display flex items-center justify-between py-5 text-5xl"
+                        >
+                          {item.label}
+                          {current ? <span className="type-meta text-signal">Current</span> : null}
+                        </Link>
+                      )}
                     </li>
                   );
                 })}

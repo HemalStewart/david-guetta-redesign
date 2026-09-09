@@ -2,15 +2,19 @@ import type { Video } from "@/lib/content/types";
 
 /**
  * Videos from the official David Guetta YouTube channel, reached through the
- * playlist that davidguetta.com links to as "Videos", and confirmed one by one
- * through YouTube's oEmbed endpoint on 8 September 2026 — every title and
- * channel below came back from YouTube itself, not from guesswork.
+ * playlist that davidguetta.com links to as "Videos". Every title, channel and
+ * thumbnail below was confirmed one at a time through YouTube's oEmbed
+ * endpoint on 8 September 2026 — none of it is guesswork, and anything the
+ * endpoint did not attribute to the "David Guetta" channel was dropped.
  *
  * REAL CONTENT, NOT CLEARED. Stills are the official YouTube thumbnails, used
- * here as concept placeholders. Approved stills and an approved video
- * selection are still required — see ASSET-MANIFEST.md.
+ * here as concept placeholders. An approved video selection and approved
+ * stills are still required — see ASSET-MANIFEST.md.
  *
  * `date` and `duration` are null because the source does not state them.
+ * `category` comes from the wording in each official title. Every video in the
+ * linked playlist is a music video, so the category filter on /watch stays
+ * hidden until a second category (live sets, visualizers) is supplied.
  */
 export const officialVideos: Video[] = [
   {
@@ -29,8 +33,8 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: true,
@@ -52,8 +56,8 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: false,
@@ -75,8 +79,8 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: false,
@@ -98,8 +102,8 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: false,
@@ -121,8 +125,8 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: false,
@@ -144,8 +148,8 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: false,
@@ -167,8 +171,146 @@ export const officialVideos: Video[] = [
       approval: "pending-approval",
     },
     placeholder: "stage",
-    category: "Official video",
-    // The source does not expose a publication date or a verified duration.
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
+    date: null,
+    duration: null,
+    featured: false,
+    approval: "pending-approval",
+  },
+  {
+    id: "vid-008",
+    slug: "david-guetta-and-kim-petras-when-we-were-young-the-logical-song-offici",
+    title: "David Guetta & Kim Petras - When We Were Young (The Logical Song) [Official Video]",
+    providerUrl: "https://www.youtube.com/watch?v=YBGtzfK5Bak",
+    embedId: "YBGtzfK5Bak",
+    provider: "youtube",
+    still: {
+      src: "/assets/video/YBGtzfK5Bak.jpg",
+      alt: "David Guetta & Kim Petras - When We Were Young (The Logical Song) [Official Video] — video still",
+      width: 1280,
+      height: 720,
+      source: "i.ytimg.com (official YouTube thumbnail)",
+      approval: "pending-approval",
+    },
+    placeholder: "stage",
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
+    date: null,
+    duration: null,
+    featured: false,
+    approval: "pending-approval",
+  },
+  {
+    id: "vid-009",
+    slug: "david-guetta-ayra-starr-and-lil-durk-big-fu-official-video",
+    title: "David Guetta, Ayra Starr & Lil Durk - Big FU (Official Video)",
+    providerUrl: "https://www.youtube.com/watch?v=6xk-H3ogcKQ",
+    embedId: "6xk-H3ogcKQ",
+    provider: "youtube",
+    still: {
+      src: "/assets/video/6xk-H3ogcKQ.jpg",
+      alt: "David Guetta, Ayra Starr & Lil Durk - Big FU (Official Video) — video still",
+      width: 1280,
+      height: 720,
+      source: "i.ytimg.com (official YouTube thumbnail)",
+      approval: "pending-approval",
+    },
+    placeholder: "stage",
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
+    date: null,
+    duration: null,
+    featured: false,
+    approval: "pending-approval",
+  },
+  {
+    id: "vid-010",
+    slug: "david-guetta-anne-marie-coi-leray-baby-dont-hurt-me-official-video",
+    title: "David Guetta, Anne-Marie, Coi Leray - Baby Don’t Hurt Me (Official Video)",
+    providerUrl: "https://www.youtube.com/watch?v=k3DBmAlUh1A",
+    embedId: "k3DBmAlUh1A",
+    provider: "youtube",
+    still: {
+      src: "/assets/video/k3DBmAlUh1A.jpg",
+      alt: "David Guetta, Anne-Marie, Coi Leray - Baby Don’t Hurt Me (Official Video) — video still",
+      width: 1280,
+      height: 720,
+      source: "i.ytimg.com (official YouTube thumbnail)",
+      approval: "pending-approval",
+    },
+    placeholder: "stage",
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
+    date: null,
+    duration: null,
+    featured: false,
+    approval: "pending-approval",
+  },
+  {
+    id: "vid-011",
+    slug: "david-guetta-and-bebe-rexha-i-m-good-blue-official-music-video",
+    title: "David Guetta & Bebe Rexha - I'm Good (Blue) [Official Music Video]",
+    providerUrl: "https://www.youtube.com/watch?v=90RLzVUuXe4",
+    embedId: "90RLzVUuXe4",
+    provider: "youtube",
+    still: {
+      src: "/assets/video/90RLzVUuXe4.jpg",
+      alt: "David Guetta & Bebe Rexha - I'm Good (Blue) [Official Music Video] — video still",
+      width: 1280,
+      height: 720,
+      source: "i.ytimg.com (official YouTube thumbnail)",
+      approval: "pending-approval",
+    },
+    placeholder: "stage",
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
+    date: null,
+    duration: null,
+    featured: false,
+    approval: "pending-approval",
+  },
+  {
+    id: "vid-012",
+    slug: "david-guetta-vs-benny-benassi-satisfaction-official-video",
+    title: "David Guetta vs Benny Benassi - Satisfaction (Official Video)",
+    providerUrl: "https://www.youtube.com/watch?v=0-_bCbCc6lY",
+    embedId: "0-_bCbCc6lY",
+    provider: "youtube",
+    still: {
+      src: "/assets/video/0-_bCbCc6lY.jpg",
+      alt: "David Guetta vs Benny Benassi - Satisfaction (Official Video) — video still",
+      width: 1280,
+      height: 720,
+      source: "i.ytimg.com (official YouTube thumbnail)",
+      approval: "pending-approval",
+    },
+    placeholder: "stage",
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
+    date: null,
+    duration: null,
+    featured: false,
+    approval: "pending-approval",
+  },
+  {
+    id: "vid-013",
+    slug: "david-guetta-and-becky-hill-and-ella-henderson-crazy-what-love-can-do",
+    title: "David Guetta & Becky Hill & Ella Henderson - Crazy What Love Can Do (Official Music Video)",
+    providerUrl: "https://www.youtube.com/watch?v=8bzesUu_a4I",
+    embedId: "8bzesUu_a4I",
+    provider: "youtube",
+    still: {
+      src: "/assets/video/8bzesUu_a4I.jpg",
+      alt: "David Guetta & Becky Hill & Ella Henderson - Crazy What Love Can Do (Official Music Video) — video still",
+      width: 1280,
+      height: 720,
+      source: "i.ytimg.com (official YouTube thumbnail)",
+      approval: "pending-approval",
+    },
+    placeholder: "stage",
+    // Derived from the wording the official title itself uses, not assigned.
+    category: "Music video",
     date: null,
     duration: null,
     featured: false,

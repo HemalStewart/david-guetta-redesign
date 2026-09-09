@@ -63,12 +63,40 @@ something to repeat on every thumbnail.
 | Content | Source | What was NOT taken |
 | --- | --- | --- |
 | 8 release titles, artwork, official page URLs, Spotify album links | `davidguetta.com/discography` and each `/album/…` page | Release dates, release types, tracklists, credits and descriptions — the source publishes none of these, so all are `null`. WordPress upload-folder dates (2022/03 …) are upload dates, not release dates, and were deliberately not used. |
-| 7 videos: titles, YouTube ids, watch URLs, thumbnails | The official channel playlist linked from the site as "Videos"; every title and channel re-confirmed one at a time through YouTube's oEmbed endpoint | Publication dates and durations — not stated by the source, so `null`. |
+| 13 videos: titles, YouTube ids, watch URLs, thumbnails | The official channel playlist linked from the site as "Videos"; every title and channel re-confirmed one at a time through YouTube's oEmbed endpoint. Anything the endpoint did not attribute to the "David Guetta" channel was dropped. | Publication dates and durations — not stated by the source, so `null`. Every video in that playlist is a music video, so the category filter on `/watch` stays hidden until a second category exists. |
+| 4 products: titles, photos, prices, stock | The public Shopify product feed at `store.davidguetta.com/products.json`, read 9 September 2026 | Nothing. Prices and stock are shown only because they came from the store's own live data — the one condition `design.md` §7G allows. |
+| 8 award wins + DJ Mag number-one years | Wikipedia, "List of awards and nominations received by David Guetta", parsed from the **rendered** results table with rowspans resolved | Nominations, totals, and any "x-time winner" phrasing. See the note below. |
 | Wordmark, socials, radio/podcast link, events provider | `davidguetta.com` | — |
 
 The source lists **"I'm Good (Blue)" twice**, with identical artwork and the
 same Spotify album. The duplicate was dropped and the surviving entry uses the
 clean `im-good-blue` slug rather than the source's `im-good-blue-2`.
+
+### Awards — the highest-risk content on the site
+
+These are factual claims about a living person, and `design.md` §5 names
+"invented awards" among the things to avoid. Three deliberate constraints:
+
+1. The wikitext version of that table leans heavily on `rowspan`, so a naive
+   parse pairs a category with the wrong year — the first extraction attempt
+   produced exactly that. The list was rebuilt from the **rendered** table with
+   rowspans expanded, and every row was checked individually.
+2. Only wins are modelled. Nominations are not in the data model at all.
+3. **No counts are derived.** The DJ Mag line states the years (2011, 2020,
+   2021, 2023, 2025) rather than "5× number one", so a reader can check it and
+   the site makes no summary claim of its own.
+
+Wikipedia is a starting point, not an authority. Management must confirm this
+list before launch; it is a blocking item on the launch checklist.
+
+### Two stores exist
+
+`store.davidguetta.com` is a Shopify store on the artist's own domain (store
+name "DAVID GUETTA", country FR, currency EUR) and is what the build links to.
+There is a second live store at `davidguettashop.com` ("EXCLUSIVE RED ROCKS
+MERCH", USD), and `davidguetta.myshopify.com` is password-locked.
+`shop.davidguetta.com` simply redirects to the main site. The client must
+confirm which store is canonical before launch.
 
 **Tour dates were deliberately not taken.** The live site loads them from a
 Bandsintown widget; scraping that into the build would put unverified event
@@ -109,7 +137,9 @@ an approved status it was never granted.
 | Approved privacy and terms copy | `/privacy`, `/terms`, newsletter consent |
 | Newsletter provider, sender identity, approved consent wording | Updates section |
 | Legal entity for the copyright line | Footer |
-| Official store URL (optional) | Shop nav item and merch module |
+| Confirmation of which store is canonical | Shop nav item and merch module |
+| Confirmation of the awards list, or an approved replacement | The recognition section |
+| A decision on live store data: re-read the feed on a schedule, or drop prices and link out | Price accuracy — the current figures are a 9 September 2026 snapshot |
 
 Reference sites named in the brief (Martin Garrix, Swedish House Mafia, Calvin
 Harris, Dua Lipa) were inspected for hierarchy only. No asset, logo, artwork or

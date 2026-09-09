@@ -22,7 +22,7 @@ export function FeaturedRelease({ release }: { release: Release | null }) {
   return (
     <section aria-labelledby="featured-release-heading" className="on-paper bg-paper text-ink">
       <Container className="py-16 md:py-24 lg:py-32">
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
+        <div className="scroll-in grid gap-10 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-5">
             <ResponsiveMedia
               image={release.artwork}

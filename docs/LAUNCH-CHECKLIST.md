@@ -39,8 +39,8 @@ Two separate questions. The first is answered; the second is not.
 ### Verification
 - [x] `npm run typecheck` — pass
 - [x] `npm run lint` — pass
-- [x] `npm test` — 36 unit tests pass
-- [x] `npm run test:e2e` — 54 interaction, responsive and weight tests pass
+- [x] `npm test` — 45 unit tests pass
+- [x] `npm run test:e2e` — 62 interaction, responsive, motion and weight tests pass
 - [x] `npm run build` — pass
 - [x] Contrast measured; two failures found and fixed
 - [x] No horizontal overflow at 360 / 390 / 768 / 1024 / 1440 px
@@ -51,6 +51,11 @@ Two separate questions. The first is answered; the second is not.
 - [x] `README.md`, `ASSET-MANIFEST.md`, `.env.example`
 - [x] `docs/CONTENT-GUIDE.md`, `docs/QA-REPORT.md`, `docs/MIGRATION.md`
 - [x] Screenshots in `docs/screenshots/`
+- [x] Store module, conditional on a confirmed store URL, linking out with no
+      checkout of any kind on this site
+- [x] Recognition module listing wins only, with no derived totals
+- [x] Restrained CSS motion: hero entrance, scroll-linked settle, artwork
+      hover, arrow shift — all reduced-motion aware, none able to hide content
 
 ---
 
@@ -72,6 +77,16 @@ Nothing here can be resolved by the build team alone.
       links currently in place
 - [ ] **Full artist credits** — the discography lists only "David Guetta";
       featured artists appear in titles and on sleeves but are not confirmed
+- [ ] **Confirmation of the awards list.** Eight wins and the DJ Mag
+      number-one years are compiled from Wikipedia's awards table. These are
+      factual claims about a living person on something that looks like an
+      official site — management must confirm them or supply a replacement
+      list. **Blocking.**
+- [ ] **Which store is canonical**: `store.davidguetta.com` (linked now) or
+      `davidguettashop.com`. Both are live.
+- [ ] **How store prices stay accurate**: re-read the Shopify feed on a
+      schedule, or drop the price line and link out. The figures in the build
+      are a 9 September 2026 snapshot.
 - [ ] **Tour data**: authorised provider access or an approved export, with
       ticket and waitlist URLs and accurate statuses
 - [ ] **Video URLs and stills**, approved for embedding

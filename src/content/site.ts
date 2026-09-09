@@ -18,7 +18,8 @@ export const siteSettings: SiteSettings = {
     { label: "Music", href: "/music" },
     { label: "Watch", href: "/watch" },
     { label: "Updates", href: "/#updates" },
-    // Shop is added here only once an official store URL is confirmed.
+    // Placed after Watch, per design.md §4, now that an official store exists.
+    { label: "Shop", href: "https://store.davidguetta.com", external: true },
   ],
   socials: [
     { label: "Instagram", href: "https://instagram.com/davidguetta/" },
@@ -34,8 +35,10 @@ export const siteSettings: SiteSettings = {
   pressKitUrl: null,
   // Radio Show / podcast route preserved from the current site.
   radioUrl: "https://davidguetta.lnk.to/podcast",
-  // No official store confirmed — the Shop module stays out of the build.
-  storeUrl: null,
+  // Official Shopify store on the artist's own domain (name "DAVID GUETTA",
+  // FR, EUR). Note there is a second live store at davidguettashop.com — the
+  // client must confirm which is canonical.
+  storeUrl: "https://store.davidguetta.com",
   eventsProviderUrl: "https://www.bandsintown.com/a/26317-david-guetta",
   // Observed on the current footer as "What A Music", but not owner-confirmed.
   copyright: null,

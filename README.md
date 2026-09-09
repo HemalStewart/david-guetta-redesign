@@ -78,12 +78,14 @@ src/
   components/
     layout/            Header (+ mobile menu), Footer, DemoNotice, PolicyPage
     sections/          Hero, NextShow, FeaturedRelease, LivePreview,
-                       PerformanceFeature, Updates, NewsletterForm
+                       PerformanceFeature, MerchFeature, Recognition,
+                       Updates, NewsletterForm
     music/             ReleaseCard, ReleaseFilters, ListenAction
     live/              EventRow, EventFilters, EventStatus
     media/             ResponsiveMedia, PlaceholderArt, VideoDialog
     ui/                ButtonLink, Container, SectionLabel, PageHeader
-  content/             demo fixtures — the only place fake content lives
+  content/             site settings, campaign, releases, events, videos,
+                       awards, products — the only place content lives
   lib/
     content/           the adapter every component reads through, plus validation
     dates/             venue-timezone and date-range handling
@@ -129,7 +131,13 @@ inventing a value:
 
 Listening links are real Spotify album URLs taken from each release's own page
 on davidguetta.com. Videos are real, embedded only on an explicit click, from
-ids confirmed through YouTube's oEmbed endpoint.
+ids confirmed through YouTube's oEmbed endpoint. Store prices come from the
+official Shopify feed and are shown with their currency and read date — the
+site never handles a transaction, and no cart or checkout exists anywhere.
+
+Awards are the one piece of content that needs the most scrutiny: eight wins
+compiled from a public reference, marked as a selection, excluding nominations,
+with no derived totals, and awaiting management confirmation.
 
 The "Concept preview" strip at the top of every page is driven by
 `siteSettings.demoMode` in `src/content/site.ts`. It disappears when that is set
