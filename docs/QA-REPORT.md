@@ -177,9 +177,16 @@ Route output from the production build:
   precondition for a usable hero.
 - **Nothing is requested on a 390 px viewport**: no video file, no third party.
 - **Nothing is requested under `prefers-reduced-motion: reduce`.**
-- On desktop the embed is muted, has controls suppressed, loops, and carries a
-  playlist of more than one clip — the montage is assembled by YouTube, never
-  by cutting the footage ourselves.
+- On desktop the embed is muted with controls, captions, keyboard and
+  fullscreen suppressed, and carries **neither `loop` nor `playlist`** — either
+  makes the player show its own prev/play/next overlay when a clip starts, and
+  `controls=0` does not suppress that. The montage is cycled by the layer
+  instead, one clip at a time.
+- A freshly mounted clip stays transparent until the player has settled (4.2 s
+  on the first, cold mount; 2.6 s after), so the start-up overlay is never
+  visible. The still underneath is what shows in the meantime.
+- The montage advances to the next clip on its own, verified by polling the
+  iframe's `src` across a transition.
 - The embed is served from `youtube-nocookie.com`, never `www.youtube.com`.
 - The frame is `aria-hidden` with `tabindex="-1"`: scenery, not content, and
   not a keyboard trap.

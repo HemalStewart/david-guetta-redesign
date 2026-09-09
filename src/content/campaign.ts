@@ -121,8 +121,10 @@ export const portraitCampaign: Campaign = {
  * `public/assets/hero/` and switch `video` to `kind: "file"` — the pipeline
  * already supports it and needs no code changes.
  *
- * The montage is assembled by YouTube, not by us: the first id is the embed and
- * the rest become its playlist, so the clips play in sequence and loop.
+ * The clips are cycled by us, one mounted at a time. Handing YouTube a playlist
+ * was simpler but made it flash its own prev/play/next overlay at the start of
+ * every clip; mounting each one separately lets the layer keep the frame hidden
+ * until the player has settled.
  *
  * Three things to settle before launch, all of them real:
  *
@@ -177,6 +179,10 @@ export const musicVideoCampaign: Campaign = {
       "k3DBmAlUh1A", // Baby Don't Hurt Me, with Anne-Marie and Coi Leray
       "8bzesUu_a4I", // Crazy What Love Can Do, with Becky Hill and Ella Henderson
     ],
+    clipSeconds: 20,
+    // Music videos open on black, then a title card. Starting well in skips
+    // both and lands on footage rather than someone else's typography.
+    startSeconds: 48,
     poster: "/assets/video/90RLzVUuXe4.jpg",
   },
   primaryAction: { label: "View shows", href: "/live" },

@@ -101,11 +101,15 @@ export type Campaign = {
     | {
         kind: "youtube";
         /**
-         * Played in order and looped. The first id is the embed; the rest
-         * become its playlist, which is how a montage is assembled without
-         * cutting or re-encoding anything.
+         * Played in order and looped. Each is mounted on its own — see
+         * HeroVideoLayer for why we cycle these ourselves rather than handing
+         * YouTube a playlist.
          */
         ids: string[];
+        /** Seconds each clip stays on screen before the next one is mounted. */
+        clipSeconds: number;
+        /** Where to start each clip, to skip slow intros. */
+        startSeconds: number;
         /** Local still, so the hero is composed before any third party loads. */
         poster: string;
       }

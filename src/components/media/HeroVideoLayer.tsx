@@ -15,7 +15,7 @@ import type { Campaign } from "@/lib/content/types";
  *  - Nothing is requested until AFTER the load event. The hero never competes
  *    with the content a visitor came for.
  *  - Skipped entirely under reduced motion, under Save-Data, and on phones.
- *  - Muted, always. The hosted loop has no audio track at all.
+ *  - Muted, always. The self-hosted loop has no audio track at all.
  *  - A real, labelled pause control — not a hidden gesture.
  *  - Playback stops when the hero scrolls out of view, and does not resume if
  *    the visitor paused it deliberately.
@@ -24,15 +24,28 @@ import type { Campaign } from "@/lib/content/types";
  * which is the only reliable way to stop a third-party player without pulling
  * in their API script.
  */
+// How long a freshly mounted clip stays transparent. The player shows a
+// start-up overlay for a beat; the first mount on a cold page is slower than
+// later ones, so it gets longer.
+const SETTLE_MS = 2600;
+const FIRST_SETTLE_MS = 4200;
+
 export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
   const [allowed, setAllowed] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [fileReady, setFileReady] = useState(false);
   const [pausedByUser, setPausedByUser] = useState(false);
   const [onScreen, setOnScreen] = useState(true);
+  const [clip, setClip] = useState(0);
+  // The clip that has settled enough to be shown. Kept separate from `clip` so
+  // a change of clip hides the frame until this catches up.
+  const [settledClip, setSettledClip] = useState(-1);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
 
   const video = campaign.video;
+  const isEmbed = video?.kind === "youtube";
+  const playing = allowed && !pausedByUser && onScreen;
 
   useEffect(() => {
     if (!video) return undefined;
@@ -70,15 +83,49 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
   useEffect(() => {
     const element = videoRef.current;
     if (!element) return;
-    if (!onScreen || pausedByUser) element.pause();
+    if (!playing) element.pause();
     else void element.play().catch(() => undefined);
-  }, [onScreen, pausedByUser]);
+  }, [playing]);
+
+  /**
+   * Advance the montage ourselves.
+   *
+   * Handing YouTube a multi-video playlist was simpler, but it flashes its own
+   * prev / play / next overlay at the start of every clip and `controls=0` does
+   * not suppress that. Mounting one clip at a time, each as a single-video
+   * loop, avoids the playlist chrome entirely.
+   */
+  useEffect(() => {
+    if (!isEmbed || !playing || !video || video.kind !== "youtube") return undefined;
+    const timer = window.setInterval(
+      () => setClip((index) => (index + 1) % video.ids.length),
+      video.clipSeconds * 1000,
+    );
+    return () => window.clearInterval(timer);
+  }, [isEmbed, playing, video]);
+
+  /**
+   * Reveal a clip only once the player has had time to start and drop the brief
+   * overlay it shows on load. Until then `settledClip` lags `clip` and the
+   * frame stays transparent, so the still underneath is what a visitor sees.
+   */
+  useEffect(() => {
+    if (!isEmbed || !playing) return undefined;
+    const timer = window.setTimeout(
+      () => setSettledClip(clip),
+      settledClip === -1 ? FIRST_SETTLE_MS : SETTLE_MS,
+    );
+    return () => window.clearTimeout(timer);
+    // `settledClip` is read but deliberately not a dependency: re-running this
+    // on its own change would restart the timer it just satisfied.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmbed, playing, clip]);
 
   const toggle = useCallback(() => setPausedByUser((paused) => !paused), []);
 
   if (!video) return null;
 
-  const playing = allowed && !pausedByUser && onScreen;
+  const embedVisible = settledClip === clip;
 
   return (
     <div ref={frameRef} className="absolute inset-0">
@@ -86,7 +133,7 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
         <video
           ref={videoRef}
           className={`absolute inset-0 hidden h-full w-full object-cover transition-opacity duration-700 lg:block ${
-            ready ? "opacity-100" : "opacity-0"
+            fileReady ? "opacity-100" : "opacity-0"
           }`}
           // No poster attribute on purpose: the art-directed still is already
           // painted underneath, and the video only fades in once it can play.
@@ -98,10 +145,10 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
           preload="none"
           aria-hidden="true"
           tabIndex={-1}
-          onCanPlay={() => setReady(true)}
+          onCanPlay={() => setFileReady(true)}
           onError={() => {
             setAllowed(false);
-            setReady(false);
+            setFileReady(false);
           }}
         >
           {video.sources.map((source) => (
@@ -118,18 +165,18 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
           aria-hidden="true"
         >
           <iframe
+            key={video.ids[clip]}
             title=""
             aria-hidden="true"
             tabIndex={-1}
-            onLoad={() => setReady(true)}
             // Cover, in container units rather than viewport units: the hero is
             // 82svh, so vw/vh maths pillarboxes the player. The extra scale
             // pushes YouTube's own furniture — captions along the bottom, the
             // logo in the corner — outside the visible crop.
-            className={`absolute left-1/2 top-1/2 h-[56.25cqw] max-h-none w-[100cqw] min-w-[177.78cqh] -translate-x-1/2 -translate-y-1/2 scale-[1.28] transition-opacity duration-700 ${
-              ready ? "opacity-100" : "opacity-0"
+            className={`absolute left-1/2 top-1/2 h-[56.25cqw] min-h-[100cqh] w-[100cqw] min-w-[177.78cqh] -translate-x-1/2 -translate-y-1/2 scale-[1.28] transition-opacity duration-700 ${
+              embedVisible ? "opacity-100" : "opacity-0"
             }`}
-            src={youtubeBackgroundUrl(video.ids)}
+            src={youtubeBackgroundUrl(video.ids[clip], video.startSeconds)}
             allow="autoplay; encrypted-media"
             referrerPolicy="strict-origin-when-cross-origin"
             frameBorder="0"
@@ -154,20 +201,21 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
 }
 
 /**
- * Background-embed parameters.
+ * Background-embed parameters for ONE clip.
  *
- * `youtube-nocookie.com` defers YouTube's tracking cookies until playback, and
- * `loop` needs an explicit `playlist` — with several ids that same parameter is
- * what turns the hero into a montage, played by YouTube rather than cut by us.
+ * `youtube-nocookie.com` defers YouTube's tracking cookies until playback.
+ *
+ * Note what is NOT here: `loop` and `playlist`. Either of them makes the player
+ * treat this as a playlist and show its own prev / play / next overlay when a
+ * clip starts, which `controls=0` does not suppress. We swap clips well before
+ * any of them ends, so neither parameter is needed.
  */
-function youtubeBackgroundUrl(ids: string[]): string {
-  const [first, ...rest] = ids;
+function youtubeBackgroundUrl(id: string, startSeconds: number): string {
   const params = new URLSearchParams({
     autoplay: "1",
     mute: "1",
     controls: "0",
-    loop: "1",
-    playlist: (rest.length > 0 ? rest : [first]).join(","),
+    start: String(startSeconds),
     playsinline: "1",
     rel: "0",
     disablekb: "1",
@@ -176,5 +224,5 @@ function youtubeBackgroundUrl(ids: string[]): string {
     cc_load_policy: "0",
     fs: "0",
   });
-  return `https://www.youtube-nocookie.com/embed/${first}?${params.toString()}`;
+  return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
 }

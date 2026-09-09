@@ -441,9 +441,13 @@ test.describe("hero video", () => {
     const src = (await frame.getAttribute("src"))!;
     expect(src).toContain("mute=1");
     expect(src).toContain("controls=0");
-    expect(src).toContain("loop=1");
-    // Several ids means YouTube plays the montage; we never cut the footage.
-    expect(new URL(src).searchParams.get("playlist")!.split(",").length).toBeGreaterThan(1);
+    expect(src).toContain("cc_load_policy=0");
+    // No loop and no playlist: either makes the player show its own
+    // prev/play/next overlay when a clip starts, and controls=0 does not
+    // suppress that. The montage is cycled by us instead, one clip at a time.
+    const params = new URL(src).searchParams;
+    expect(params.get("playlist")).toBeNull();
+    expect(params.get("loop")).toBeNull();
     // Scenery, not content: no keyboard trap, nothing announced.
     await expect(frame).toHaveAttribute("aria-hidden", "true");
     await expect(frame).toHaveAttribute("tabindex", "-1");
@@ -472,6 +476,33 @@ test.describe("hero video", () => {
     await expect(page.locator('iframe[src*="youtube"]')).toHaveCount(0);
     await page.getByRole("button", { name: /Play background/ }).click();
     await expect(page.locator('iframe[src*="youtube"]')).toHaveCount(1);
+  });
+
+  test("a clip is hidden until the player has settled, so its chrome is never seen", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+
+    const frame = page.locator('iframe[src*="youtube"]');
+    await frame.waitFor();
+    // Mounted but transparent while YouTube shows its start-up overlay.
+    await expect(frame).toHaveCSS("opacity", "0");
+    // ...and visible once it has settled.
+    await expect(frame).toHaveCSS("opacity", "1", { timeout: 9000 });
+  });
+
+  test("the montage advances to the next clip on its own", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+
+    const frame = page.locator('iframe[src*="youtube"]');
+    await frame.waitFor();
+    const first = (await frame.getAttribute("src"))!;
+    // clipSeconds is 20; allow for the settle delay on the next clip too.
+    await expect
+      .poll(async () => page.locator('iframe[src*="youtube"]').getAttribute("src"), { timeout: 30_000 })
+      .not.toBe(first);
   });
 
   test("scrolling away tears the embed down", async ({ page }) => {

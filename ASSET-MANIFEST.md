@@ -57,6 +57,12 @@ The clips are a selection from the official channel playlist. They are **not**
 ranked by popularity: no view-count data was available, and a "most popular"
 claim is not something this build can support.
 
+Each clip starts 48 seconds in, which clears the black opening and the video's
+own title card — otherwise someone else's typography competes with the hero
+headline. Clips run for 20 seconds each before the next is mounted. Both are
+`clipSeconds` and `startSeconds` on the campaign, so the client can retime the
+montage without touching code.
+
 ### The generated loop is original, not lifted footage
 
 `tools/make-hero-loop.py` draws the loop from scratch — beams from a lighting
