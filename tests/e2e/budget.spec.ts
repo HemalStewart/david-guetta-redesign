@@ -11,29 +11,53 @@ import { expect, test } from "@playwright/test";
  *  - `next start` optimises images on demand, so the first request for a size
  *    is slower and larger than the cached variant a CDN would serve. Each test
  *    warms the page once, then measures.
- *  - The remaining run-to-run spread is roughly 320–490 KB. The assertion is a
- *    generous regression guard — it catches someone dropping in an unoptimised
- *    5 MB hero — not a performance claim. Field LCP/INP/CLS cannot be measured
- *    from a local run at all.
+ *  - Bytes are split at the load event. The hero loop and the lazy imagery
+ *    further down the page are requested only after it, so they are reported
+ *    separately rather than folded into one number that would misrepresent
+ *    what a visitor waits for on arrival. Note that the loop keeps the network
+ *    busy, which delays networkidle and pulls more lazy images into the
+ *    "after" bucket — another reason not to read a single total.
+ *  - The assertion is a generous regression guard — it catches someone dropping
+ *    in an unoptimised 5 MB hero — not a performance claim. Field LCP/INP/CLS
+ *    cannot be measured from a local run at all.
  */
 async function measure(page: import("@playwright/test").Page, path: string) {
-  let bytes = 0;
-  let requests = 0;
+  let initialBytes = 0;
+  let laterBytes = 0;
+  let initialRequests = 0;
+  let loaded = false;
+
   page.on("response", async (response) => {
-    requests += 1;
     const length = response.headers()["content-length"];
-    if (length) bytes += Number(length);
-    else {
+    let size = length ? Number(length) : 0;
+    if (!length) {
       try {
-        bytes += (await response.body()).length;
+        size = (await response.body()).length;
       } catch {
         /* redirects and aborted responses have no body */
       }
     }
+    if (loaded) {
+      laterBytes += size;
+    } else {
+      initialBytes += size;
+      initialRequests += 1;
+    }
   });
+
   await page.goto(path);
+  await page.waitForLoadState("load");
+  loaded = true;
+  // Everything after this point — the hero loop, and lazy imagery further down
+  // the page — is counted separately. Folding it into one number would
+  // misrepresent what a visitor actually waits for on arrival.
   await page.waitForLoadState("networkidle");
-  return { kb: Math.round(bytes / 1024), requests };
+
+  return {
+    initialKb: Math.round(initialBytes / 1024),
+    laterKb: Math.round(laterBytes / 1024),
+    requests: initialRequests,
+  };
 }
 
 /**
@@ -61,15 +85,15 @@ async function warmThenMeasure(
 }
 
 test("home page transfer stays inside the project budget @ 1440px", async ({ browser, page }) => {
-  const { kb, requests } = await warmThenMeasure(browser, page, { width: 1440, height: 900 }, "/");
-  console.log(`home @1440: ${kb} KB across ${requests} requests`);
-  expect(kb).toBeLessThan(1200);
+  const { initialKb, laterKb, requests } = await warmThenMeasure(browser, page, { width: 1440, height: 900 }, "/");
+  console.log(`home @1440: ${initialKb} KB / ${requests} requests to load, +${laterKb} KB after (loop + lazy imagery)`);
+  expect(initialKb).toBeLessThan(900);
 });
 
 test("home page transfer stays inside the project budget @ 390px", async ({ browser, page }) => {
-  const { kb, requests } = await warmThenMeasure(browser, page, { width: 390, height: 844 }, "/");
-  console.log(`home @390: ${kb} KB across ${requests} requests`);
-  expect(kb).toBeLessThan(1200);
+  const { initialKb, laterKb, requests } = await warmThenMeasure(browser, page, { width: 390, height: 844 }, "/");
+  console.log(`home @390: ${initialKb} KB / ${requests} requests to load, +${laterKb} KB after (lazy imagery)`);
+  expect(initialKb).toBeLessThan(900);
 });
 
 test("no third-party player or feed loads before the visitor asks", async ({ page }) => {

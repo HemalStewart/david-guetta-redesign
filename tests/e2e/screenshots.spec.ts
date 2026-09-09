@@ -102,3 +102,17 @@ test("404 @ 1440px", async ({ page }) => {
   await page.goto("/music/not-a-real-release");
   await page.screenshot({ path: `${DIR}/not-found-1440.png` });
 });
+
+test("hero with the loop playing @ 1440px", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.waitForLoadState("load");
+  await page.locator("video").waitFor();
+  // Let the loop reach a frame with the beams well separated.
+  await page.evaluate(() => {
+    const video = document.querySelector("video");
+    if (video) video.currentTime = 2.4;
+  });
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: `${DIR}/hero-video-1440.png` });
+});

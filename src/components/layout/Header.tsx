@@ -165,7 +165,7 @@ export function Header({ settings }: { settings: SiteSettings }) {
           role="dialog"
           aria-modal="true"
           aria-label="Site menu"
-          className="fixed inset-0 top-0 z-50 flex h-[100dvh] flex-col bg-ink md:hidden"
+          className="dialog-in fixed inset-0 top-0 z-50 flex h-[100dvh] flex-col bg-ink md:hidden"
         >
           <Container className="flex h-16 items-center justify-between">
             <Wordmark settings={settings} onClick={closeMenu} />

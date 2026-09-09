@@ -383,3 +383,79 @@ test.describe("recognition", () => {
     await expect(section.getByText(/\d+\s*[×x]\s*number one/i)).toHaveCount(0);
   });
 });
+
+test.describe("hero video", () => {
+  /**
+   * The loop is an enhancement. These assert it can never become a
+   * precondition for a usable hero.
+   */
+  test("the hero is complete before any video exists", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    // Block the video outright: this is the "blocked, throttled or missing" case.
+    await page.route("**/hero-loop.*", (route) => route.abort());
+    await page.goto("/");
+
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: "View shows" })).toBeVisible();
+    // The poster is a real <img>, server-rendered, and stays put.
+    const poster = page.locator('img[src*="hero-loop-poster"]').first();
+    await expect(poster).toBeVisible();
+    expect((await poster.boundingBox())!.height).toBeGreaterThan(100);
+  });
+
+  test("no video is requested on a phone viewport", async ({ page }) => {
+    const requested: string[] = [];
+    page.on("request", (request) => {
+      if (/hero-loop\.(webm|mp4)/.test(request.url())) requested.push(request.url());
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(900);
+    expect(requested, "phones must get the still, not the loop").toHaveLength(0);
+    await expect(page.locator("video")).toHaveCount(0);
+  });
+
+  test("no video is requested under reduced motion", async ({ page }) => {
+    const requested: string[] = [];
+    page.on("request", (request) => {
+      if (/hero-loop\.(webm|mp4)/.test(request.url())) requested.push(request.url());
+    });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(900);
+    expect(requested).toHaveLength(0);
+    await expect(page.locator("video")).toHaveCount(0);
+  });
+
+  test("on desktop the loop plays muted, loops, and offers a real pause control", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+
+    const video = page.locator("video");
+    await expect(video).toHaveCount(1);
+    await expect(video).toHaveJSProperty("muted", true);
+    await expect(video).toHaveJSProperty("loop", true);
+    // The generated file carries no audio track at all.
+    await expect(video).toHaveJSProperty("autoplay", true);
+
+    const pause = page.getByRole("button", { name: /Pause background/ });
+    await expect(pause).toBeVisible();
+    await pause.click();
+    await expect(video).toHaveJSProperty("paused", true);
+    await expect(page.getByRole("button", { name: /Play background/ })).toBeVisible();
+  });
+
+  test("the loop stops once the hero leaves the viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.locator("video").waitFor();
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(page.locator("video")).toHaveJSProperty("paused", true);
+  });
+});

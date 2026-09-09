@@ -5,7 +5,7 @@ import { demoEvents } from "../../src/content/events.ts";
 import { storeProducts } from "../../src/content/products.ts";
 import { officialReleases } from "../../src/content/releases.ts";
 import { officialVideos } from "../../src/content/videos.ts";
-import { activeCampaign } from "../../src/content/campaign.ts";
+import { atmosphericCampaign, portraitCampaign } from "../../src/content/campaign.ts";
 import { siteSettings } from "../../src/content/site.ts";
 import { filterEvents, matchesQuery } from "../../src/lib/content/filter.ts";
 import {
@@ -38,20 +38,43 @@ describe("shipped fixtures", () => {
     }
   });
 
-  it("record where every real image came from, so provenance survives to approval", () => {
+  it("record where every image came from, so provenance survives to approval", () => {
     const images = [
-      activeCampaign.image,
-      activeCampaign.mobileImage,
+      atmosphericCampaign.image,
+      atmosphericCampaign.mobileImage,
+      portraitCampaign.image,
+      portraitCampaign.mobileImage,
       ...officialReleases.map((release) => release.artwork),
       ...officialVideos.map((video) => video.still),
+      ...storeProducts.map((product) => product.image),
     ].filter((image) => image !== null);
 
     assert.ok(images.length > 0);
     for (const image of images) {
-      assert.equal(image.approval, "pending-approval");
       assert.ok(image.source, `an image is missing its source: ${image.src}`);
       assert.ok(image.src.startsWith("/assets/"), `${image.src} is not a local asset`);
+
+      // Only artwork this project generated itself may claim approval.
+      // Anything lifted from an official source stays pending until the
+      // client confirms the rights position.
+      const isOriginal = image.source!.startsWith("Original");
+      if (!isOriginal) {
+        assert.equal(image.approval, "pending-approval", `${image.src} claims approval it does not have`);
+      }
     }
+  });
+
+  it("ship an original, self-generated hero loop rather than lifted footage", () => {
+    const video = atmosphericCampaign.video;
+    assert.ok(video, "the atmospheric campaign must carry a loop");
+    assert.ok(video.sources.length >= 2, "offer webm and mp4");
+    for (const source of video.sources) {
+      assert.ok(source.src.startsWith("/assets/hero/"), source.src);
+    }
+    // The poster must be the loop's own frame, or the swap is visible.
+    assert.equal(video.poster, "/assets/hero/hero-loop-poster.jpg");
+    assert.equal(atmosphericCampaign.image?.src, video.poster);
+    assert.ok(video.durationSeconds >= 6 && video.durationSeconds <= 10, "design.md §7B asks for 6-10s");
   });
 
   it("keeps every release traceable to the page it came from", () => {

@@ -55,7 +55,9 @@ needs to be running first. Install browsers once with
 `npx playwright install chromium`.
 
 There is also `node tests/tools/contrast.mjs`, which prints the measured
-contrast ratio of every design token pair.
+contrast ratio of every design token pair, and
+`python3 tools/make-hero-loop.py`, which regenerates the original hero loop
+(needs Pillow, numpy and ffmpeg).
 
 ## Versions in use
 
@@ -82,7 +84,8 @@ src/
                        Updates, NewsletterForm
     music/             ReleaseCard, ReleaseFilters, ListenAction
     live/              EventRow, EventFilters, EventStatus
-    media/             ResponsiveMedia, PlaceholderArt, VideoDialog
+    media/             ResponsiveMedia, PlaceholderArt, VideoDialog,
+                       HeroStill (art-directed <picture>), HeroVideoLayer
     ui/                ButtonLink, Container, SectionLabel, PageHeader
   content/             site settings, campaign, releases, events, videos,
                        awards, products — the only place content lives

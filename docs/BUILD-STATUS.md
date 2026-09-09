@@ -29,8 +29,13 @@ content and services — see `LAUNCH-CHECKLIST.md`.
 - Recognition module: 8 selected wins plus DJ Mag number-one years, wins only,
   no derived totals
 - 13 official videos, up from 7
-- Restrained CSS motion: hero entrance, scroll-linked settle, artwork hover,
-  arrow shift — reduced-motion aware, and unable to hide content
+- Hero video pipeline: original 8 s generated loop, poster-first, requested
+  only after load, desktop only, reduced-motion and Save-Data aware, real pause
+  control, pauses off-screen, still never removed
+- Art-directed hero `<picture>` so only one crop is ever fetched
+- CSS motion: hero entrance, Ken Burns, light sweep, scroll-linked settle,
+  artwork hover, arrow shift, dialog entrance, live-row nudge — all
+  reduced-motion aware, none able to hide content
 - Full handoff docs and screenshots
 
 ## Checks already run — do not repeat unless the code changes
@@ -39,8 +44,8 @@ content and services — see `LAUNCH-CHECKLIST.md`.
 | --- | --- |
 | `npm run typecheck` | Pass |
 | `npm run lint` | Pass, 0 warnings |
-| `npm test` | 45 pass |
-| `npm run test:e2e` | 62 pass |
+| `npm test` | 46 pass |
+| `npm run test:e2e` | 68 pass |
 | `npm run build` | Pass |
 | Contrast audit | Pass after two fixes |
 

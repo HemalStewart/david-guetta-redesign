@@ -75,8 +75,18 @@ export type Campaign = {
   image: MaybeImage;
   mobileImage: MaybeImage;
   placeholder: PlaceholderVariant;
-  /** Optional approved atmospheric loop. Poster always renders first. */
-  video: { src: string; poster: string } | null;
+  /**
+   * Optional approved atmospheric loop. The poster always renders first and
+   * the video is an enhancement on top of it — see HeroMedia for the rules.
+   * Sources are offered in order, so put the smallest format first.
+   */
+  video: {
+    sources: { src: string; type: string }[];
+    /** Must visually match the campaign image, or the swap is jarring. */
+    poster: string;
+    /** Seconds. Kept short per design.md §7B (6–10 s). */
+    durationSeconds: number;
+  } | null;
   primaryAction: ExternalLink;
   secondaryAction: ExternalLink | null;
   caption: string | null;

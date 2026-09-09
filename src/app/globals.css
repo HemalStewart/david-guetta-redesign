@@ -168,6 +168,68 @@
     .enter-3 { animation-delay: 260ms; }
     .enter-4 { animation-delay: 360ms; }
 
+    /* Slow scale on the hero still. Transform only, so it can never hide
+       anything, and it stops the moment a video loop takes over. */
+    @keyframes ken-burns {
+      from {
+        transform: scale(1);
+      }
+      to {
+        transform: scale(1.07);
+      }
+    }
+
+    .ken-burns {
+      animation: ken-burns 26s ease-out forwards;
+      will-change: transform;
+    }
+
+    /* A single warm sweep across the hero, once, after the title lands.
+       Purely additive light — no strobe, and nothing underneath depends on it. */
+    @keyframes light-sweep {
+      from {
+        opacity: 0;
+        transform: translateX(-30%) skewX(-12deg);
+      }
+      35% {
+        opacity: 0.5;
+      }
+      to {
+        opacity: 0;
+        transform: translateX(130%) skewX(-12deg);
+      }
+    }
+
+    .light-sweep {
+      animation: light-sweep 2600ms cubic-bezier(0.4, 0, 0.2, 1) 700ms both;
+    }
+
+    /* Live rows nudge their city on hover, so the whole row reads as one
+       target rather than only the button at its end. */
+    .row-nudge {
+      transition: transform 200ms ease-out;
+    }
+
+    li:hover > article .row-nudge {
+      transform: translateX(6px);
+    }
+
+    /* Dialogs arrive rather than appearing. */
+    @keyframes dialog-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .dialog-in {
+      animation: dialog-in 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+
     /* Scroll-linked settle, CSS-only.
        This animates TRANSFORM ONLY — deliberately not opacity.
        A view() timeline sits at progress 0 for anything that has not been

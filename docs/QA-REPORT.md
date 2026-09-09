@@ -16,9 +16,9 @@ This records what was actually run. Anything not run is listed under
 | --- | --- |
 | `npm run typecheck` (`tsc --noEmit`) | **Pass** — no errors |
 | `npm run lint` (`eslint`) | **Pass** — 0 errors, 0 warnings |
-| `npm test` (`node --test`) | **Pass** — 45 tests, 12 suites, 0 failures |
+| `npm test` (`node --test`) | **Pass** — 46 tests, 12 suites, 0 failures |
 | `npm run build` | **Pass** — 17 routes generated |
-| `npm run test:e2e` (`playwright test`) | **Pass** — 62 tests, 0 failures |
+| `npm run test:e2e` (`playwright test`) | **Pass** — 68 tests, 0 failures |
 | `node tests/tools/contrast.mjs` | Ran; results below |
 
 Route output from the production build:
@@ -34,7 +34,7 @@ Route output from the production build:
 
 ---
 
-## Unit tests — 45 passing
+## Unit tests — 46 passing
 
 `tests/unit/`, run on the real source modules with an injected clock.
 
@@ -97,7 +97,7 @@ Route output from the production build:
 
 ---
 
-## Interaction tests — 62 passing
+## Interaction tests — 68 passing
 
 `tests/e2e/`, against the production build.
 
@@ -171,6 +171,15 @@ Route output from the production build:
 - Under `prefers-reduced-motion: reduce`, `animationName` is `none` on the H1
   and on every animated wrapper.
 
+**Hero video** (5)
+- With `hero-loop.*` requests aborted outright, the H1, the primary CTA and the
+  poster still render — the loop can never become a precondition.
+- **No video file is requested on a 390 px viewport.**
+- **No video file is requested under `prefers-reduced-motion: reduce`.**
+- On desktop the loop is muted, loops, autoplays, and exposes a labelled
+  "Pause background" control that actually pauses it.
+- Scrolling the hero out of view pauses playback.
+
 **Responsive integrity**
 - No horizontal overflow on `/`, `/live`, `/music`, a long-titled release
   detail, `/watch` and `/contact` at **360, 390, 768, 1024 and 1440 px**.
@@ -178,12 +187,28 @@ Route output from the production build:
 - Hero CTAs and the Menu button are ≥44 px.
 
 **Page weight** (production build, local network, real photography in place)
-- `/` at 1440 px: **467 KB across 27 requests** after the store and recognition
-  sections were added (364–536 KB before).
-- `/` at 390 px: **417 KB across 22 requests**.
+Bytes are now split at the `load` event, because a single total would
+misrepresent what a visitor waits for — the hero loop and the lazy imagery
+further down the page are fetched only afterwards.
 
-Request counts did not change when two sections were added: store and video
-imagery is below the fold and lazy-loaded, so it costs nothing on first view.
+- `/` at 1440 px: **778 KB over 17 requests to load**, then +163 KB (loop and
+  lazy imagery).
+- `/` at 390 px: **768 KB over 16 requests to load**, no video at all.
+
+The bulk is framework JavaScript (224 KB + 162 KB) and two self-hosted font
+files (62 KB). The heaviest image on first load is a 40 KB video still.
+
+**A real waste was found and fixed while measuring.** The hero rendered the
+phone crop and the desktop frame as two `<Image>` elements in a
+`lg:hidden` / `hidden lg:block` pair. That looks right but the browser fetches
+both, so every desktop visitor also downloaded the portrait crop — at `w=1920`,
+because an element inside `display:none` has no layout width to size against.
+Measured at 93 KB per desktop visit. `HeroStill` now builds a real `<picture>`
+from `getImageProps`, so exactly one source is fetched, and it moved off the
+client bundle in the process. The `<video poster>` attribute was also dropped:
+the still is already painted underneath and the video only fades in once it can
+play, so the poster attribute just re-downloaded the same frame (40 KB) for
+something no one sees.
 - **Zero third-party requests** on first load — no player, font CDN, social
   embed or analytics beacon. The YouTube iframe is created only on click, so
   simply loading the homepage contacts nothing but the origin.
@@ -267,6 +292,7 @@ In `docs/screenshots/`, regenerate with `npm run screenshots`.
 | `watch-390/1440.png` | Video collection |
 | `mobile-menu-390.png` | Menu open, social links at the bottom |
 | `video-dialog-1440.png` | Dialog with the honest unconnected state |
+| `hero-video-1440.png` | The hero with the atmospheric loop playing |
 | `newsletter-unconnected-1440.png` | Sign-up reporting it is not connected |
 | `not-found-1440.png` | 404 |
 
@@ -288,6 +314,9 @@ In `docs/screenshots/`, regenerate with `npm run screenshots`.
 | Two contrast failures (see above) | New `signal-ink` and `control-*` tokens. |
 | Inter 600 was loaded but never used | Removed from the font load. |
 | The scroll-linked reveal animated opacity, leaving every below-the-fold section at opacity 0 until scrolled — the same class of bug as the JS reveal removed earlier | Scroll animation made transform-only; three tests added to lock it in. |
+| The hero fetched both the phone crop and the desktop frame on every visit (93 KB wasted per desktop load) | Replaced the two-`<Image>` pair with a real art-directed `<picture>` built from `getImageProps`. |
+| The `<video poster>` attribute re-downloaded a frame nobody sees, since the still sits underneath | Attribute removed. |
+| The page-weight test reported a single total, which the post-load video inflated by keeping the network busy and pulling lazy images into `networkidle` | Bytes are now split at the `load` event and reported separately. |
 | Store product images rendered as blank squares in full-page captures — 1.3 MB transparent PNGs that the on-demand optimiser had not finished processing, and which a `fullPage` capture never requests because it does not scroll | Sources downscaled to 1200 px, and the screenshot helper now walks the page to trigger lazy loads before capturing. |
 | The page-weight test warmed and measured in the same page, so it reported a browser-cache figure (67 KB) that no visitor would ever see | Measurement moved to a fresh browser context after warming. |
 | `networkidle` never settled on image-heavy routes at 390 px, hanging the screenshot run | Switched to `load` plus a settle beat. |
@@ -358,6 +387,10 @@ Stated plainly so nobody assumes otherwise.
 - **Core Web Vitals**: no field LCP, INP or CLS figures exist. A local
   measurement cannot produce them. The 75th-percentile targets in `design.md`
   §14 remain goals, not results.
+- **Video across browsers**: the loop was only exercised in Chromium. Safari's
+  autoplay rules for muted inline video, and its handling of VP9, need a real
+  check. The H.264 fallback exists for exactly that reason but is untested
+  outside Chromium.
 - **Real browsers**: only Chromium was tested. **Mobile Safari, desktop Safari
   and Firefox were not.** Two areas deserve a real-device check: `100dvh` on
   the mobile menu, and iOS Safari's handling of the sticky header over the

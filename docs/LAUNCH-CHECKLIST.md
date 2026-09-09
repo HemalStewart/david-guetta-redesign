@@ -39,8 +39,8 @@ Two separate questions. The first is answered; the second is not.
 ### Verification
 - [x] `npm run typecheck` — pass
 - [x] `npm run lint` — pass
-- [x] `npm test` — 45 unit tests pass
-- [x] `npm run test:e2e` — 62 interaction, responsive, motion and weight tests pass
+- [x] `npm test` — 46 unit tests pass
+- [x] `npm run test:e2e` — 68 interaction, responsive, motion, video and weight tests pass
 - [x] `npm run build` — pass
 - [x] Contrast measured; two failures found and fixed
 - [x] No horizontal overflow at 360 / 390 / 768 / 1024 / 1440 px
@@ -96,7 +96,11 @@ Nothing here can be resolved by the build team alone.
       "Draft placeholder — not legal copy" and this blocks launch outright.
 - [ ] **Copyright holder / legal entity** for the footer
 - [ ] **Newsletter consent wording**, approved
-- [ ] **Optional**: official store URL, press kit, hero video loop
+- [ ] **Approved stage footage** to replace the original generated loop —
+      6–10 s, silent, no strobe, with a poster frame that matches it
+- [ ] A decision on which hero leads: the atmospheric loop (active) or the
+      photograph (`portraitCampaign`, one line away)
+- [ ] **Optional**: press kit
 - [ ] Replace the placeholder favicon (`src/app/icon.svg`) with the approved brand icon
 
 ## Outstanding — services

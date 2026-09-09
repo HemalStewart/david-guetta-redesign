@@ -36,6 +36,43 @@ To run a release-led campaign instead, change `titleLines` to the release
 title, point `primaryAction` at the smart link, and set `image` / `mobileImage`.
 Nothing about the page layout changes.
 
+### Switching hero
+
+Two campaigns ship, and the last line of the file picks one:
+
+```ts
+export const activeCampaign: Campaign = atmosphericCampaign;  // or portraitCampaign
+```
+
+- **`atmosphericCampaign`** (active): the original generated loop on desktop,
+  the photograph on phones. Motion, no face on desktop.
+- **`portraitCampaign`**: the photograph everywhere, with a slow Ken Burns
+  scale instead of video. Keeps the artist's face on desktop.
+
+### Adding approved footage
+
+```ts
+video: {
+  sources: [                       // smallest format first
+    { src: "/assets/hero/loop.webm", type: "video/webm" },
+    { src: "/assets/hero/loop.mp4",  type: "video/mp4" },
+  ],
+  poster: "/assets/hero/loop-poster.jpg",   // must match campaign.image
+  durationSeconds: 8,                        // 6-10s per design.md §7B
+}
+```
+
+The file must have **no audio track**. The poster must be the same frame as
+`campaign.image`, or the swap is visible. Set `video: null` and the hero falls
+back to the still with a Ken Burns scale — no code change needed.
+
+The loop is only ever requested after the load event, on a desktop viewport,
+with reduced motion and Save-Data respected. It is an enhancement; the still
+underneath is server-rendered and never removed.
+
+To regenerate the placeholder loop: `python3 tools/make-hero-loop.py`
+(needs Pillow, numpy and ffmpeg).
+
 Add photography by replacing the `null`s:
 
 ```ts

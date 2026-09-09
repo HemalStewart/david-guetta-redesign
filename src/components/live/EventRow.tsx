@@ -81,7 +81,7 @@ export function EventRow({ event }: { event: LiveEvent }) {
 
         {/* City takes visual priority; venue and event name are secondary. */}
         <div className="md:col-span-5 lg:col-span-7">
-          <h3 className="type-display text-3xl leading-[0.95] md:text-4xl lg:text-[3.25rem]">
+          <h3 className="row-nudge type-display text-3xl leading-[0.95] md:text-4xl lg:text-[3.25rem]">
             {event.city}
             <span className="sr-only">, {event.country}</span>
           </h3>

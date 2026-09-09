@@ -1,4 +1,5 @@
-import { ResponsiveMedia } from "@/components/media/ResponsiveMedia";
+import { HeroStill } from "@/components/media/HeroStill";
+import { HeroVideoLayer } from "@/components/media/HeroVideoLayer";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import type { Campaign } from "@/lib/content/types";
@@ -24,23 +25,12 @@ export function Hero({ campaign }: { campaign: Campaign }) {
   return (
     <section className="relative flex flex-col justify-end lg:min-h-[82svh]">
       <div className="relative lg:absolute lg:inset-0">
-        {/* Phone gets its own portrait master; desktop gets the wide frame. */}
-        <ResponsiveMedia
-          image={campaign.mobileImage ?? campaign.image}
-          placeholder={campaign.placeholder}
-          seed={campaign.id}
-          aspect="aspect-[4/5] sm:aspect-[16/10] lg:hidden"
-          sizes="100vw"
-          priority
-        />
-        <ResponsiveMedia
-          image={campaign.image}
-          placeholder={campaign.placeholder}
-          seed={campaign.id}
-          aspect="hidden lg:block lg:h-full"
-          sizes="100vw"
-          priority
-        />
+        {/* Phone gets a portrait crop, desktop the wide frame; the browser
+            fetches exactly one of them. The loop layers on top, if allowed. */}
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink-raised sm:aspect-[16/10] lg:aspect-auto lg:h-full">
+          <HeroStill campaign={campaign} cinematic={!campaign.video} />
+          <HeroVideoLayer campaign={campaign} />
+        </div>
 
         {/* Two scrims: upward on phone, inward from the right on desktop. */}
         <div
@@ -49,8 +39,12 @@ export function Hero({ campaign }: { campaign: Campaign }) {
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 hidden lg:block lg:bg-gradient-to-l lg:from-ink/90 lg:via-ink/35 lg:to-transparent"
+          className="absolute inset-0 hidden lg:block lg:bg-gradient-to-l lg:from-ink/90 lg:via-ink/30 lg:to-transparent"
         />
+        {/* One warm pass of light across the frame as the hero settles. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="light-sweep absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-signal/25 to-transparent" />
+        </div>
       </div>
 
       <Container className="relative z-10 pb-12 pt-8 lg:pb-20 lg:pt-40">
@@ -80,7 +74,7 @@ export function Hero({ campaign }: { campaign: Campaign }) {
         </div>
 
         {campaign.caption ? (
-          <p className="type-meta mt-10 text-muted-dark lg:absolute lg:bottom-20 lg:left-16 lg:mt-0">
+          <p className="type-meta mt-10 max-w-md text-muted-dark lg:absolute lg:bottom-24 lg:left-16 lg:mt-0">
             {campaign.caption}
           </p>
         ) : null}

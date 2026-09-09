@@ -124,7 +124,7 @@ export function VideoLauncher({ video, fallbackUrl, size = "card", placement = "
             role="dialog"
             aria-modal="true"
             aria-label={`Video: ${video.title}`}
-            className="w-full max-w-5xl"
+            className="dialog-in w-full max-w-5xl"
           >
             <div className="flex items-start justify-between gap-4 pb-4">
               <h2 className="type-display text-2xl leading-[0.98] md:text-3xl">{video.title}</h2>
