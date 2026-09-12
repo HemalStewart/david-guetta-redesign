@@ -33,7 +33,7 @@ const MESSAGES: Record<Exclude<FormState, "idle" | "submitting">, string> = {
   duplicate: "This address is already on the list.",
   "rate-limited": "Too many attempts. Please wait a moment and try again.",
   "provider-error": "Sign-up is temporarily unavailable. Please try again shortly.",
-  unconfigured: "Preview only — sign-up is not connected. Your address was not stored or sent anywhere.",
+  unconfigured: "Sign-up isn’t connected yet. Your address was not stored or sent anywhere.",
 };
 
 const ERROR_STATES: FormState[] = ["invalid-email", "consent-required", "rate-limited", "provider-error"];
@@ -139,9 +139,9 @@ export function NewsletterForm({ configured }: { configured: boolean }) {
           className="mt-1 h-5 w-5 shrink-0 accent-signal-ink"
         />
         <label htmlFor={consentId} className="text-sm text-muted-light">
-          Yes, send me news about music and live shows. Wording to be approved by the client.{" "}
+          Yes, send me news about new music and live shows.{" "}
           <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
-            Privacy
+            Privacy policy
           </Link>
         </label>
       </div>
@@ -155,12 +155,6 @@ export function NewsletterForm({ configured }: { configured: boolean }) {
       >
         {state === "idle" || submitting ? "" : MESSAGES[state as keyof typeof MESSAGES]}
       </p>
-
-      {!configured ? (
-        <p className="type-meta mt-2 inline-flex items-center rounded-[2px] border border-dashed border-control-light px-2 py-1 text-muted-light">
-          Provider not connected
-        </p>
-      ) : null}
     </form>
   );
 }

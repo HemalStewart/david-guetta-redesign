@@ -185,17 +185,26 @@ export function HeroVideoLayer({ campaign }: { campaign: Campaign }) {
       ) : null}
 
       {allowed ? (
+        /**
+         * Deliberately small. The client asked for no visible play/pause
+         * furniture, but WCAG 2.2.2 requires a mechanism to stop motion that
+         * starts automatically and runs for more than five seconds, so this
+         * stays — an icon-only control that is nearly invisible at rest and
+         * becomes obvious on hover or keyboard focus. It is still a 44px
+         * target and still has an accessible name.
+         */
         <button
           type="button"
           onClick={toggle}
-          // Bottom-left, with the media caption: these are both notes about the
-          // footage, and the right side belongs to the title and the CTAs.
-          className="type-meta absolute bottom-8 left-16 z-20 hidden min-h-11 items-center gap-2 rounded-[2px] border border-control-dark bg-ink/70 px-4 text-paper backdrop-blur-sm hover:border-paper lg:inline-flex"
+          aria-label={pausedByUser ? "Play background video" : "Pause background video"}
+          className="absolute bottom-6 right-6 z-20 hidden h-11 w-11 items-center justify-center rounded-[2px] text-paper/35 transition-colors hover:bg-ink/60 hover:text-paper focus-visible:bg-ink/60 focus-visible:text-paper lg:inline-flex"
         >
-          <span aria-hidden="true">{pausedByUser ? "▶" : "❚❚"}</span>
-          {pausedByUser ? "Play background" : "Pause background"}
+          <span aria-hidden="true" className="text-[0.7rem] leading-none tracking-widest">
+            {pausedByUser ? "\u25B6" : "\u275A\u275A"}
+          </span>
         </button>
       ) : null}
+
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
-import { DemoNotice } from "@/components/layout/DemoNotice";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { getSiteSettings } from "@/lib/content";
@@ -61,7 +60,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        {settings.demoMode ? <DemoNotice /> : null}
         <Header settings={settings} />
         <main id="main">{children}</main>
         <Footer settings={settings} />

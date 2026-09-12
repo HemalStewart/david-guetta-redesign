@@ -193,6 +193,8 @@ an approved status it was never granted.
 | Legal entity for the copyright line | Footer |
 | Confirmation of which store is canonical | Shop nav item and merch module |
 | Confirmation of the awards list, or an approved replacement | The recognition section |
+| Official award emblems (DJ Mag, BRIT, Grammy …) if wanted | Award plates have a logo slot and read fine without one. These are registered trademarks of the awarding bodies, so they are not sourced here — they should come from the client or each body's press kit. |
+| Confirmation of the copyright line | The footer now reads "What A Music", taken from the current site's own footer |
 | A decision on live store data: re-read the feed on a schedule, or drop prices and link out | Price accuracy — the current figures are a 9 September 2026 snapshot |
 
 Reference sites named in the brief (Martin Garrix, Swedish House Mafia, Calvin

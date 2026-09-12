@@ -77,6 +77,13 @@ Nothing here can be resolved by the build team alone.
       links currently in place
 - [ ] **Full artist credits** — the discography lists only "David Guetta";
       featured artists appear in titles and on sleeves but are not confirmed
+- [x] ~~Tour data or authorised provider access~~ — live via Bandsintown, the
+      same provider the current site uses
+- [ ] Confirm whether the Ibiza residency should show "Ibiza" rather than the
+      municipality the provider returns ("Sant Josep de sa Talaia")
+- [ ] Confirm the copyright line — the footer now reads "What A Music", taken
+      from the current site's own footer, but is not owner-confirmed
+- [ ] Official award emblems, if wanted — the plates have a logo slot
 - [ ] **Confirmation of the awards list.** Eight wins and the DJ Mag
       number-one years are compiled from Wikipedia's awards table. These are
       factual claims about a living person on something that looks like an
@@ -87,8 +94,6 @@ Nothing here can be resolved by the build team alone.
 - [ ] **How store prices stay accurate**: re-read the Shopify feed on a
       schedule, or drop the price line and link out. The figures in the build
       are a 9 September 2026 snapshot.
-- [ ] **Tour data**: authorised provider access or an approved export, with
-      ticket and waitlist URLs and accurate statuses
 - [ ] **Video URLs and stills**, approved for embedding
 - [ ] **Management, press and booking destinations** — currently stated as not
       supplied, never invented

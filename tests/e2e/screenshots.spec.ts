@@ -82,7 +82,7 @@ test("newsletter unconnected state @ 1440px", async ({ page }) => {
   await page.getByLabel("Email address").fill("fan@example.com");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Sign up" }).click();
-  await page.getByText(/Preview only/).waitFor();
+  await page.getByText(/isn’t connected yet/).waitFor();
   await page.screenshot({ path: `${DIR}/newsletter-unconnected-1440.png` });
 });
 

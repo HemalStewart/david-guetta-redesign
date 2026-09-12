@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { SocialIcon } from "@/components/ui/SocialIcon";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import type { SiteSettings } from "@/lib/content/types";
@@ -80,9 +81,13 @@ export function Footer({ settings }: { settings: SiteSettings }) {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-11 items-center hover:text-signal"
+                    className="group inline-flex min-h-11 items-center gap-3 hover:text-signal"
                   >
-                    {social.label} <span aria-hidden="true">↗</span>
+                    <SocialIcon label={social.label} className="h-5 w-5 shrink-0" />
+                    {social.label}
+                    <span aria-hidden="true" className="arrow-shift opacity-60">
+                      ↗
+                    </span>
                   </a>
                 </li>
               ))}

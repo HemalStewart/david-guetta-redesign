@@ -77,10 +77,6 @@ export function MerchFeature({ products, storeUrl }: { products: ProductTeaser[]
           })}
         </ul>
 
-        <p className="mt-10 text-sm text-muted-light">
-          Prices and availability were read from the official store on 9 September 2026 and may have changed since.
-          Purchases are completed on the store, not here.
-        </p>
       </Container>
     </section>
   );

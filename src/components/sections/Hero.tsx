@@ -57,10 +57,6 @@ export function Hero({ campaign }: { campaign: Campaign }) {
             ))}
           </h1>
 
-          <p className="enter enter-2 mt-5 max-w-md text-base text-paper md:text-lg lg:ml-auto lg:mt-7">
-            {campaign.supportingCopy}
-          </p>
-
           <div className="enter enter-3 mt-8 flex flex-col gap-4 sm:flex-row sm:items-center lg:mt-10 lg:justify-end">
             <ButtonLink href={campaign.primaryAction.href} variant="primary" className="sm:min-w-56 lg:order-2">
               {campaign.primaryAction.label} <span aria-hidden="true" className="arrow-shift">→</span>
@@ -72,12 +68,6 @@ export function Hero({ campaign }: { campaign: Campaign }) {
             ) : null}
           </div>
         </div>
-
-        {campaign.caption ? (
-          <p className="type-meta mt-10 max-w-md text-muted-dark lg:absolute lg:bottom-24 lg:left-16 lg:mt-0">
-            {campaign.caption}
-          </p>
-        ) : null}
       </Container>
     </section>
   );

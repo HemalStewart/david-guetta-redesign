@@ -241,6 +241,24 @@ not used anywhere in the interface and should not become public copy.
 
 ---
 
+## Live dates
+
+Nothing to edit. `/live`, the homepage preview and the next-show strip read
+from Bandsintown through `src/lib/content/providers/bandsintown.ts`, so
+whatever the artist's team publishes there appears here within 15 minutes.
+
+- Statuses map from the provider: `sold_out` → Sold out, a future
+  `on_sale_datetime` → On sale soon, an available Tickets offer → On sale with
+  that link, anything else → Tickets unavailable.
+- A multi-day festival arrives as a range and is shown as one.
+- A clock time is only displayed when the provider marks it real.
+- If the provider fails, the last good payload is served; if there has never
+  been one, the page says dates are temporarily unavailable and links to the
+  provider. It is never rendered as "no shows".
+
+`src/content/events.ts` still exists, but only as a fixture for the unit tests.
+Editing it changes nothing on the site.
+
 ## Awards
 
 `src/content/awards.ts`. Only **wins** are modelled; there is no field for a

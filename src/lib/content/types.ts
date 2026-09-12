@@ -62,9 +62,12 @@ export type SiteSettings = {
   radioUrl: string | null;
   storeUrl: string | null;
   eventsProviderUrl: string | null;
+  /**
+   * Spotify URI path for the featured playlist, e.g. "playlist/<id>".
+   * Rendered through Spotify's official embed.
+   */
+  spotifyPlaylist: string | null;
   copyright: string | null;
-  /** True while fixtures/unconnected services are in use. */
-  demoMode: boolean;
 };
 
 export type Campaign = {
@@ -236,6 +239,13 @@ export type Award = {
   category: string;
   /** The credited work, or null when the award is to the artist themselves. */
   work: string | null;
+  /**
+   * Official award emblem, when the client supplies one. Award logos are
+   * registered trademarks belonging to the awarding bodies, so they are not
+   * sourced here — the section is designed to read well without them and to
+   * take them the moment they arrive.
+   */
+  logo: ImageRef | null;
   sourceUrl: string;
   approval: ApprovalStatus;
 };

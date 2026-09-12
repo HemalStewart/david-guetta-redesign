@@ -28,7 +28,6 @@ export function EventFilters({
 
   const urlQuery = searchParams.get("q") ?? "";
   const urlRegion = searchParams.get("region") ?? "";
-  const view = searchParams.get("view") ?? "upcoming";
 
   const [query, setQuery] = useState(urlQuery);
   const isTyping = useRef(false);
@@ -100,8 +99,8 @@ export function EventFilters({
 
         <div className="flex flex-wrap items-center gap-4 md:ml-auto md:pb-1">
           <p aria-live="polite" className="type-meta text-muted-dark">
-            <span className="tabular">{resultCount}</span> of <span className="tabular">{totalCount}</span>{" "}
-            {view === "past" ? "past" : "upcoming"} shows
+            <span className="tabular">{resultCount}</span> of <span className="tabular">{totalCount}</span> upcoming
+            shows
           </p>
           {filtered ? (
             <button

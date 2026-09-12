@@ -55,6 +55,10 @@ function EventAction({ event }: { event: LiveEvent }) {
 
 export function EventRow({ event }: { event: LiveEvent }) {
   const startTime = formatStartTime(event);
+  // The provider often sets the venue name and the event title to the same
+  // string (a residency's brand is both), so only show the title when it adds
+  // something.
+  const title = event.title && event.title !== event.venue ? event.title : null;
 
   return (
     <li className="border-b border-rule-dark transition-colors duration-150 hover:bg-paper/[0.04]">
@@ -89,7 +93,7 @@ export function EventRow({ event }: { event: LiveEvent }) {
             <span aria-hidden="true">{event.country}</span>
             <span aria-hidden="true"> · </span>
             {event.venue}
-            {event.title ? <span className="text-muted-dark"> · {event.title}</span> : null}
+            {title ? <span className="text-muted-dark"> · {title}</span> : null}
             {startTime ? <span className="tabular"> · {startTime}</span> : null}
           </p>
         </div>

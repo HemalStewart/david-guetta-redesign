@@ -3,10 +3,11 @@ import Link from "next/link";
 import { ResponsiveMedia } from "@/components/media/ResponsiveMedia";
 import { ReleaseCard, releaseMetaLine } from "@/components/music/ReleaseCard";
 import { ReleaseFilters } from "@/components/music/ReleaseFilters";
+import { SpotifyEmbed } from "@/components/music/SpotifyEmbed";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { getFeaturedRelease, getReleaseYears, getReleases } from "@/lib/content";
+import { getFeaturedRelease, getReleaseYears, getReleases, getSiteSettings } from "@/lib/content";
 import type { ReleaseType } from "@/lib/content/types";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ type SearchParams = Promise<{ type?: string; year?: string }>;
 
 export default async function MusicPage({ searchParams }: { searchParams: SearchParams }) {
   const { type = "", year = "" } = await searchParams;
+  const settings = getSiteSettings();
   const all = getReleases();
   const featured = getFeaturedRelease();
   const featuredMeta = featured ? releaseMetaLine(featured) : null;
@@ -31,8 +33,6 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
   const availableTypes = [...new Set(all.map((release) => release.type))].filter(
     (type): type is ReleaseType => type !== null,
   );
-  // Filters only exist for metadata the client has actually supplied.
-  const missingMetadata = all.some((release) => !release.type || !release.releaseDate);
 
   return (
     <>
@@ -40,7 +40,6 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
         index="01"
         label="Music"
         title="Music"
-        intro="Releases, remixes and albums. Every entry links to its detail page and, once connected, to verified listening destinations."
       />
 
       <Container className="pb-24">
@@ -82,15 +81,18 @@ export default async function MusicPage({ searchParams }: { searchParams: Search
           </section>
         ) : null}
 
-        <ReleaseFilters availableTypes={availableTypes} years={getReleaseYears()} activeType={type} activeYear={year} />
-
-        {missingMetadata ? (
-          <p className="mt-6 max-w-prose text-sm text-muted-dark">
-            Release type and year filters appear automatically once that metadata is supplied. The official
-            discography this preview draws from does not publish release dates or types, and none have been
-            invented here.
-          </p>
+        {settings.spotifyPlaylist ? (
+          <section aria-labelledby="playlist-heading" className="mb-14 border-t border-rule-dark pt-10">
+            <h2 id="playlist-heading" className="type-meta text-signal">
+              Listen now
+            </h2>
+            <div className="mt-6">
+              <SpotifyEmbed uri={settings.spotifyPlaylist} title="David Guetta playlist on Spotify" height={480} />
+            </div>
+          </section>
         ) : null}
+
+        <ReleaseFilters availableTypes={availableTypes} years={getReleaseYears()} activeType={type} activeYear={year} />
 
         {filtered.length > 0 ? (
           <>

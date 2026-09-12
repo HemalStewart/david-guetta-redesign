@@ -1,71 +1,78 @@
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import type { Award } from "@/lib/content/types";
 
 /**
- * Recognition (an addition to the brief's homepage rhythm, sitting between the
- * performance feature and the store).
+ * Recognition — a wall of award plates rather than a list.
  *
- * Deliberately built as a quiet ruled list — year, body, category — in the same
- * language as the live dates, rather than a row of trophy badges or oversized
- * counts. `design.md` §5 rules out "fake metrics" and "trusted by" strips, and
- * a wall of numerals is how an awards section turns into one.
+ * The awarding bodies' emblems are registered trademarks, so none are sourced
+ * here. Each plate is built to carry the weight on its own — a very large year,
+ * the body set in the display face, the category beneath — and to take an
+ * official emblem in the corner the moment the client supplies one.
  *
- * Nothing is summarised into a total. The DJ Mag line states the actual years
- * rather than "5× number one", so a reader can check it.
+ * Two rules that survive from the first version: wins only, no nominations;
+ * and no derived totals. The DJ Mag block states the actual years, so a reader
+ * can check it, rather than claiming "five times number one".
  */
+function AwardPlate({ award }: { award: Award }) {
+  return (
+    <li className="group relative flex min-h-52 flex-col justify-between border border-rule-dark bg-ink-raised p-6 transition-colors duration-200 hover:border-signal md:min-h-56 md:p-7">
+      <div className="flex items-start justify-between gap-4">
+        <p className="type-display tabular text-4xl leading-none text-signal md:text-5xl">{award.year}</p>
+        {award.logo ? (
+          <Image
+            src={award.logo.src}
+            alt={award.logo.alt}
+            width={award.logo.width}
+            height={award.logo.height}
+            className="h-8 w-auto opacity-70 md:h-9"
+          />
+        ) : null}
+      </div>
+
+      <div>
+        <h3 className="type-display text-xl leading-[1.02] md:text-2xl">{award.organisation}</h3>
+        <p className="mt-2 text-sm text-muted-dark">{award.category}</p>
+        {award.work ? <p className="mt-1 text-sm text-muted-dark/80">{award.work}</p> : null}
+      </div>
+    </li>
+  );
+}
+
 export function Recognition({ awards, djMagYears }: { awards: Award[]; djMagYears: number[] }) {
   if (awards.length === 0 && djMagYears.length === 0) return null;
 
   return (
     <section aria-labelledby="recognition-heading" className="border-t border-rule-dark bg-ink">
       <Container className="py-16 md:py-24 lg:py-32">
-        <div className="scroll-in grid gap-10 lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-4">
+        <div className="scroll-in flex flex-wrap items-end justify-between gap-6">
+          <div>
             <SectionLabel index="05" label="Recognition" />
-            <h2
-              id="recognition-heading"
-              className="type-display mt-4 text-5xl leading-[0.92] md:text-6xl lg:text-[4.5rem]"
-            >
+            <h2 id="recognition-heading" className="type-display mt-4 text-5xl leading-[0.92] md:text-6xl lg:text-7xl">
               Selected wins.
             </h2>
-
-            {djMagYears.length > 0 ? (
-              <div className="mt-8 border-t border-rule-dark pt-6">
-                <p className="type-meta text-muted-dark">DJ Mag Top 100 — number one</p>
-                <p className="type-display tabular mt-2 text-3xl leading-none md:text-4xl">
-                  {djMagYears.join("  ")}
-                </p>
-              </div>
-            ) : null}
-
-            <p className="mt-8 max-w-prose text-sm text-muted-dark">
-              A selection of competitive wins, not a complete list, and nominations are not included. Compiled from a
-              public reference and awaiting confirmation by management.
-            </p>
           </div>
+        </div>
 
-          <div className="lg:col-span-7 lg:col-start-6">
-            <ul className="border-t border-rule-dark">
-              {awards.map((award) => (
-                <li key={award.id} className="border-b border-rule-dark">
-                  <article className="grid grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-1 py-5 md:gap-x-8">
-                    <p className="type-display tabular text-2xl leading-none text-signal md:text-[1.75rem]">
-                      {award.year}
-                    </p>
-                    <div>
-                      <h3 className="type-display text-xl leading-[1.05] md:text-2xl">{award.organisation}</h3>
-                      <p className="mt-1 text-sm text-muted-dark">
-                        {award.category}
-                        {award.work ? <span> — {award.work}</span> : null}
-                      </p>
-                    </div>
-                  </article>
+        {djMagYears.length > 0 ? (
+          <div className="mt-12 border-y border-rule-dark py-8 md:flex md:items-center md:gap-10 md:py-10">
+            <p className="type-meta shrink-0 text-muted-dark md:w-64">DJ Mag Top 100 — number one</p>
+            <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-3 md:mt-0">
+              {djMagYears.map((year) => (
+                <li key={year} className="type-display tabular text-4xl leading-none md:text-6xl lg:text-7xl">
+                  {year}
                 </li>
               ))}
             </ul>
           </div>
-        </div>
+        ) : null}
+
+        <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {awards.map((award) => (
+            <AwardPlate key={award.id} award={award} />
+          ))}
+        </ul>
       </Container>
     </section>
   );

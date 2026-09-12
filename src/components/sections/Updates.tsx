@@ -14,8 +14,8 @@ export function Updates({ configured }: { configured: boolean }) {
           <h2 id="updates-heading" className="type-display text-5xl leading-[0.92] md:text-7xl lg:text-8xl">
             Be there for what&rsquo;s next.
           </h2>
-          <p className="mt-6 max-w-prose text-base text-muted-light md:text-lg">
-            New music, show announcements and updates from David Guetta.
+          <p className="mt-6 max-w-prose text-lg text-muted-light md:text-xl">
+            New music, show announcements and tour news — first, and direct.
           </p>
           <NewsletterForm configured={configured} />
         </div>

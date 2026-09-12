@@ -22,7 +22,6 @@ export default function WatchPage() {
         index="03"
         label="Watch"
         title="Watch"
-        intro="Live sets, music videos and behind-the-scenes film. Each video opens on request — nothing plays automatically."
       />
 
       <Container className="pb-24">

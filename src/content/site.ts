@@ -40,7 +40,9 @@ export const siteSettings: SiteSettings = {
   // client must confirm which is canonical.
   storeUrl: "https://store.davidguetta.com",
   eventsProviderUrl: "https://www.bandsintown.com/a/26317-david-guetta",
-  // Observed on the current footer as "What A Music", but not owner-confirmed.
-  copyright: null,
-  demoMode: true,
+  // The artist's own Spotify playlist, linked from the current site's footer.
+  spotifyPlaylist: "playlist/1ONoVwmw96EtWKfcdsrVZf",
+  // As shown on the current site's own footer. Confirm the exact legal entity
+  // and wording with management before launch.
+  copyright: "What A Music",
 };

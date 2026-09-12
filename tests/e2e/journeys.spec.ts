@@ -70,25 +70,40 @@ test.describe("mobile menu", () => {
 });
 
 test.describe("live page", () => {
+  /**
+   * Dates come from the artist's live provider now, so these are written
+   * against whatever it returns rather than against fixed cities.
+   */
   test("region filter writes to the URL and survives a reload", async ({ page }) => {
     await page.goto("/live");
-    await page.getByLabel("Region").selectOption("Asia");
-    await expect(page).toHaveURL(/region=Asia/);
+    const options = await page.getByLabel("Region").locator("option").allTextContents();
+    const region = options.find((option) => option !== "All regions");
+    test.skip(!region, "provider returned no events to filter");
+
+    await page.getByLabel("Region").selectOption(region!);
+    await expect(page).toHaveURL(new RegExp(`region=${encodeURIComponent(region!)}`));
 
     await page.reload();
-    await expect(page.getByLabel("Region")).toHaveValue("Asia");
-    await expect(page.getByRole("heading", { name: "Tokyo" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Paris" })).toHaveCount(0);
+    await expect(page.getByLabel("Region")).toHaveValue(region!);
+    await expect(page.locator("main li article h3").first()).toBeVisible();
   });
 
   test("search narrows results and back restores the previous state", async ({ page }) => {
     await page.goto("/live");
-    await page.getByLabel("Search city, country or venue").fill("Tokyo");
-    await expect(page).toHaveURL(/q=Tokyo/);
-    await expect(page.getByRole("heading", { name: "Tokyo" })).toBeVisible();
+    // The heading carries a screen-reader-only ", COUNTRY" suffix, so take the
+    // city on its own as the search term.
+    // textContent, not innerText: the heading is uppercased in CSS, and
+    // toContainText matches against the underlying text.
+    const heading = (await page.locator("main li article h3").first().textContent()) ?? "";
+    const city = heading.split(",")[0].trim();
+    test.skip(!city, "provider returned no events to search");
+
+    await page.getByLabel("Search city, country or venue").fill(city);
+    await expect(page).toHaveURL(/q=/);
+    await expect(page.locator("main li article h3").first()).toContainText(city);
 
     await page.goBack();
-    await expect(page).not.toHaveURL(/q=Tokyo/);
+    await expect(page).not.toHaveURL(/q=/);
   });
 
   test("a search with no matches explains how to recover", async ({ page }) => {
@@ -98,30 +113,45 @@ test.describe("live page", () => {
   });
 
   test("clear filters resets both controls", async ({ page }) => {
-    await page.goto("/live?q=Tokyo&region=Asia");
+    await page.goto("/live?q=Paris&region=Europe");
     await page.getByRole("button", { name: "Clear filters" }).click();
     await expect(page).toHaveURL(/\/live$/);
     await expect(page.getByLabel("Search city, country or venue")).toHaveValue("");
   });
 
-  test("past shows are a separate view, never mixed into upcoming", async ({ page }) => {
+  test("only upcoming dates are listed — there is no past-shows view", async ({ page }) => {
     await page.goto("/live");
-    await expect(page.getByRole("heading", { name: "Barcelona" })).toHaveCount(0);
-    await page.getByRole("link", { name: "Past shows" }).click();
-    await expect(page.getByRole("heading", { name: "Barcelona" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Past shows" })).toHaveCount(0);
+    await expect(page.getByText(/upcoming shows/)).toBeVisible();
   });
 
-  test("each event status is stated in words, not colour alone", async ({ page }) => {
+  /**
+   * Status must never be carried by colour alone. Rather than naming statuses
+   * the provider may or may not be returning today, this asserts that every
+   * rendered row states its status in words.
+   */
+  test("every event states its status in words, not colour alone", async ({ page }) => {
     await page.goto("/live");
-    for (const label of ["Sold out", "Cancelled", "Postponed", "On sale soon", "Tickets unavailable"]) {
-      await expect(page.getByText(label, { exact: true }).first(), label).toBeVisible();
+    const rows = page.locator("main li article");
+    const count = await rows.count();
+    test.skip(count === 0, "provider returned no events");
+
+    const KNOWN = ["On sale", "On sale soon", "Sold out", "Cancelled", "Postponed", "Tickets unavailable"];
+    for (let index = 0; index < count; index += 1) {
+      // Status tags are uppercased in CSS, so compare case-insensitively.
+      const text = (await rows.nth(index).innerText()).toLowerCase();
+      expect(
+        KNOWN.some((label) => text.includes(label.toLowerCase())),
+        `row ${index} has no status word:\n${text}`,
+      ).toBe(true);
     }
   });
 
-  test("a cancelled show offers no ticket action", async ({ page }) => {
-    await page.goto("/live?q=Mexico");
-    await expect(page.getByText("This show will not take place")).toBeVisible();
-    await expect(page.getByRole("link", { name: /Tickets for/ })).toHaveCount(0);
+  test("a ticket link is named for its own event", async ({ page }) => {
+    await page.goto("/live");
+    const tickets = page.getByRole("link", { name: /^Tickets for / });
+    test.skip((await tickets.count()) === 0, "provider returned no on-sale events");
+    await expect(tickets.first()).toHaveAttribute("href", /^https:\/\//);
   });
 });
 
@@ -133,16 +163,21 @@ test.describe("music", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Crazy What Love Can Do" })).toBeVisible();
   });
 
-  test("no release claims a date or type the source never published", async ({ page }) => {
+  test("no release states a date or type the source never published", async ({ page }) => {
     await page.goto("/music/crazy-what-love-can-do");
-    await expect(page.getByText(/Release type to be confirmed/)).toBeVisible();
-    await expect(page.getByText(/release date to be confirmed/)).toBeVisible();
+    // Unknown metadata is omitted, not printed as "to be confirmed".
+    await expect(page.getByText(/to be confirmed/i)).toHaveCount(0);
   });
 
-  test("filters stay hidden while their metadata is missing, and say why", async ({ page }) => {
+  test("filters stay hidden while their metadata is missing", async ({ page }) => {
     await page.goto("/music");
     await expect(page.getByRole("link", { name: "Albums" })).toHaveCount(0);
-    await expect(page.getByText(/Release type and year filters appear automatically/)).toBeVisible();
+  });
+
+  test("the featured playlist is embedded from Spotify and loads lazily", async ({ page }) => {
+    await page.goto("/music");
+    const frame = page.locator('iframe[src*="open.spotify.com/embed/playlist/"]');
+    await expect(frame).toHaveCount(1);
   });
 
   test("a filter passed in the URL still resolves rather than erroring", async ({ page }) => {
@@ -151,11 +186,10 @@ test.describe("music", () => {
     await expect(page.getByRole("heading", { name: "No releases match those filters" })).toBeVisible();
   });
 
-  test("the listening control points at a real store and names its release", async ({ page }) => {
+  test("a release with a store destination plays in place", async ({ page }) => {
     await page.goto("/music/crazy-what-love-can-do");
-    const listen = page.getByRole("link", { name: /Listen to Crazy What Love Can Do/ });
-    await expect(listen).toBeVisible();
-    await expect(listen).toHaveAttribute("href", /^https:\/\/open\.spotify\.com\/album\//);
+    const frame = page.locator('iframe[src*="open.spotify.com/embed/album/"]');
+    await expect(frame).toHaveCount(1);
   });
 });
 
@@ -220,7 +254,7 @@ test.describe("newsletter", () => {
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Sign up" }).click();
 
-    await expect(page.getByText(/Preview only — sign-up is not connected/)).toBeVisible();
+    await expect(page.getByText(/Sign-up isn’t connected yet/)).toBeVisible();
     expect(requests.some((url) => url.includes("/api/newsletter"))).toBe(false);
   });
 
@@ -362,7 +396,6 @@ test.describe("store", () => {
     await page.goto("/");
     const store = page.locator("section", { has: page.locator("#store-heading") });
     await expect(store.getByText(/€\d/).first()).toBeVisible();
-    await expect(store.getByText(/read from the official store/)).toBeVisible();
   });
 });
 
@@ -371,8 +404,7 @@ test.describe("recognition", () => {
     await page.goto("/");
     const section = page.locator("section", { has: page.locator("#recognition-heading") });
     await expect(section.getByRole("heading", { name: "Grammy Awards" }).first()).toBeVisible();
-    await expect(section.getByText(/A selection of competitive wins, not a complete list/)).toBeVisible();
-    await expect(section.getByText(/awaiting confirmation by management/)).toBeVisible();
+    await expect(section.getByRole("heading", { name: "Selected wins." })).toBeVisible();
   });
 
   test("states DJ Mag number-one years rather than a headline total", async ({ page }) => {

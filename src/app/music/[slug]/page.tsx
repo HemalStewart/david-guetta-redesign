@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ResponsiveMedia } from "@/components/media/ResponsiveMedia";
 import { ListenAction } from "@/components/music/ListenAction";
-import { ReleaseCard, releaseTypeLabel } from "@/components/music/ReleaseCard";
+import { SpotifyEmbed } from "@/components/music/SpotifyEmbed";
+import { ReleaseCard, releaseMetaLine, releaseTypeLabel } from "@/components/music/ReleaseCard";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Container } from "@/components/ui/Container";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -35,6 +36,9 @@ export default async function ReleasePage({ params }: { params: Params }) {
   if (!release) notFound();
 
   const related = getRelatedReleases(slug);
+  const meta = releaseMetaLine(release);
+  // Play the album in place when we have a Spotify destination for it.
+  const spotifyAlbum = spotifyUri(release.smartLink ?? release.platforms.find((p) => p.platform === "Spotify")?.href);
 
   return (
     <>
@@ -55,25 +59,21 @@ export default async function ReleasePage({ params }: { params: Params }) {
           <div className="lg:col-span-6 lg:col-start-7">
             <h1 className="type-display text-[clamp(2.75rem,7vw,5rem)] leading-[0.9]">{release.title}</h1>
             <p className="mt-4 text-lg text-paper">{release.artists.join(", ")}</p>
-            <p className="type-meta mt-3 text-muted-dark">
-              {releaseTypeLabel(release.type) ?? "Release type to be confirmed"}
-              <span aria-hidden="true"> · </span>
-              {release.releaseDate ? (
-                <time dateTime={release.releaseDate} className="tabular">
-                  {formatReleaseDate(release.releaseDate)}
-                </time>
-              ) : (
-                "release date to be confirmed"
-              )}
-            </p>
+            {meta ? <p className="type-meta tabular mt-3 text-muted-dark">{meta}</p> : null}
 
             {release.description ? (
               <p className="mt-8 max-w-prose text-base text-muted-dark md:text-lg">{release.description}</p>
             ) : null}
 
-            <div className="mt-9">
-              <ListenAction release={release} variant="primary" tone="dark" />
-            </div>
+            {spotifyAlbum ? (
+              <div className="mt-9">
+                <SpotifyEmbed uri={spotifyAlbum} title={`${release.title} on Spotify`} height={352} />
+              </div>
+            ) : (
+              <div className="mt-9">
+                <ListenAction release={release} variant="primary" tone="dark" />
+              </div>
+            )}
 
             {release.tracklist ? (
               <section aria-labelledby="tracklist-heading" className="mt-12">
@@ -125,4 +125,11 @@ export default async function ReleasePage({ params }: { params: Params }) {
       ) : null}
     </>
   );
+}
+
+/** "https://open.spotify.com/album/<id>" -> "album/<id>" for the embed. */
+function spotifyUri(url: string | undefined): string | null {
+  if (!url) return null;
+  const match = /^https:\/\/open\.spotify\.com\/(album|track|playlist)\/([A-Za-z0-9]+)/.exec(url);
+  return match ? `${match[1]}/${match[2]}` : null;
 }

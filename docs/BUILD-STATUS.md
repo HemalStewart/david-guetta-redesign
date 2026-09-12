@@ -1,6 +1,6 @@
 # Build status
 
-**Last updated:** 9 September 2026
+**Last updated:** 12 September 2026
 
 ## State
 
@@ -38,6 +38,10 @@ content and services — see `LAUNCH-CHECKLIST.md`.
 - CSS motion: hero entrance, Ken Burns, light sweep, scroll-linked settle,
   artwork hover, arrow shift, dialog entrance, live-row nudge — all
   reduced-motion aware, none able to hide content
+- Live tour dates via a real Bandsintown integration — 15-minute revalidate,
+  last-known-good fallback, typed failure state
+- Spotify embeds: the artist's playlist on /music, the album on each release
+- Award plates with a slot for official emblems
 - Full handoff docs and screenshots
 
 ## Checks already run — do not repeat unless the code changes

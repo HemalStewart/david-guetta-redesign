@@ -9,18 +9,17 @@
  */
 import { selectedAwards, djMagNumberOneYears } from "@/content/awards";
 import { activeCampaign } from "@/content/campaign";
-import { demoEvents } from "@/content/events";
 import { storeProducts } from "@/content/products";
 import { officialReleases } from "@/content/releases";
 import { siteSettings } from "@/content/site";
+import { fetchLiveEvents } from "./providers/bandsintown";
 import { officialVideos } from "@/content/videos";
-import { nextEvent, pastEvents, upcomingEvents } from "@/lib/dates";
+import { nextEvent, upcomingEvents } from "@/lib/dates";
 import type { Award, Campaign, LiveEvent, ProductTeaser, Region, Release, SiteSettings, Video } from "./types";
-import { validateAwards, validateEvents, validateProducts, validateReleases, validateVideos } from "./validate";
+import { validateAwards, validateProducts, validateReleases, validateVideos } from "./validate";
 
 /** Fixtures are validated once, at module load, so bad data fails loudly. */
 const releases = validateReleases(officialReleases);
-const events = validateEvents(demoEvents);
 const videos = validateVideos(officialVideos);
 const awards = validateAwards(selectedAwards);
 const products = validateProducts(storeProducts);
@@ -79,32 +78,29 @@ export function getReleaseYears(): number[] {
 }
 
 /**
- * All events, wrapped in a result. A real provider integration returns
- * `{ ok: false }` on failure so the UI can show a temporary-unavailability
- * state with the canonical provider link.
+ * All events, from the artist's own provider.
+ *
+ * Async because it crosses the network. The result type is what makes the
+ * failure honest: `{ ok: false }` renders a temporary-unavailability state, and
+ * is never collapsed into an empty list.
  */
-export function getEvents(): ContentResult<LiveEvent[]> {
-  return { ok: true, data: events };
+export async function getEvents(): Promise<ContentResult<LiveEvent[]>> {
+  return fetchLiveEvents();
 }
 
-export function getUpcomingEvents(now: Date): ContentResult<LiveEvent[]> {
-  const result = getEvents();
+export async function getUpcomingEvents(now: Date): Promise<ContentResult<LiveEvent[]>> {
+  const result = await getEvents();
   return result.ok ? { ok: true, data: upcomingEvents(result.data, now) } : result;
 }
 
-export function getPastEvents(now: Date): ContentResult<LiveEvent[]> {
-  const result = getEvents();
-  return result.ok ? { ok: true, data: pastEvents(result.data, now) } : result;
-}
-
-export function getNextEvent(now: Date): ContentResult<LiveEvent | null> {
-  const result = getEvents();
+export async function getNextEvent(now: Date): Promise<ContentResult<LiveEvent | null>> {
+  const result = await getEvents();
   return result.ok ? { ok: true, data: nextEvent(result.data, now) } : result;
 }
 
 /** Only regions that actually have upcoming events become filter options. */
-export function getActiveRegions(now: Date): Region[] {
-  const result = getUpcomingEvents(now);
+export async function getActiveRegions(now: Date): Promise<Region[]> {
+  const result = await getUpcomingEvents(now);
   if (!result.ok) return [];
   const regions = new Set(result.data.map((event) => event.region));
   return [...regions].sort();

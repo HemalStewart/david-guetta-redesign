@@ -42,16 +42,18 @@ import { isNewsletterConfigured } from "@/lib/newsletter";
  */
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
   const now = new Date();
   const settings = getSiteSettings();
+  // One provider call, shared by the strip and the preview below it.
+  const [nextShow, upcoming] = await Promise.all([getNextEvent(now), getUpcomingEvents(now)]);
 
   return (
     <>
       <Hero campaign={getCampaign()} />
-      <NextShow result={getNextEvent(now)} />
+      <NextShow result={nextShow} />
       <FeaturedRelease release={getFeaturedRelease()} />
-      <LivePreview result={getUpcomingEvents(now)} settings={settings} />
+      <LivePreview result={upcoming} settings={settings} />
       <PerformanceFeature video={getFeaturedVideo()} settings={settings} />
       <MerchFeature products={getProducts()} storeUrl={getStoreUrl()} />
       <Recognition awards={getAwards()} djMagYears={getDjMagNumberOneYears()} />
